@@ -1,6 +1,7 @@
 # Vert.x ElasticSearch Service
 
-Vert.x 3 elasticsearch service with event bus proxying. Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/vertx-elasticsearch-service). 
+Vert.x 3 elasticsearch service with event bus proxying and RxJava support. 
+Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/vertx-elasticsearch-service). 
 
 ### Version Matrix
 
@@ -63,9 +64,10 @@ http://www.elasticsearch.org/guide/reference/api/index_/
 An example would be:
 
 ```java
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
     
-    elasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"), indexOptions, jsonResult -> {
+    elasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"), jsonResult -> {
         // Do something
     });
     
@@ -75,9 +77,29 @@ An example would be:
         .setTtl(100000l);
         // etc.
     
-    elasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"), jsonResult -> {
+    elasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"), indexOptions, jsonResult -> {
         // Do something
     });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    rxElasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"))
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+        
+    final IndexOptions indexOptions = new IndexOptions()
+        .setId("123")
+        .setOpType(IndexRequest.OpType.INDEX)
+        .setTtl(100000l);
+        // etc.
+        
+    rxElasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"), indexOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
 ```
 
 The event bus replies with a json message with the following structure:
@@ -119,6 +141,7 @@ http://www.elasticsearch.org/guide/reference/api/get/
 An example would be:
 
 ```java
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
     
     elasticSearchService.get("twitter", "tweet", "123", jsonResult -> {
@@ -134,6 +157,26 @@ An example would be:
     elasticSearchService.get("twitter", "tweet", "123", getOptions, jsonResult -> {
         // Do something
     });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    rxElasticSearchService.get("twitter", "tweet", "123")
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+        
+    final GetOptions getOptions = new GetOptions()
+        .setFetchSource(true)
+        .addField("id")
+        .addField("message");
+        // etc.
+        
+    rxElasticSearchService.get("twitter", "tweet", "123", getOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
 ```
 
 The event bus replies with a json message with the following structure:
@@ -182,15 +225,15 @@ http://www.elasticsearch.org/guide/reference/query-dsl/
 An example message would be:
 
 ```java
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-    final JsonObject query = new JsonObject("{\"match_all\": {}}");
     
     elasticSearchService.search("twitter", jsonResult -> {
         // Do something
     });
     
     final SearchOptions searchOptions = new SearchOptions()
-        .setQuery(query)
+        .setQuery(new JsonObject("{\"match_all\": {}}"))
         .setSearchType(SearchType.SCAN)
         .setFetchSource(true)
         .addFieldSort("id", SortOrder.DESC)
@@ -200,6 +243,28 @@ An example message would be:
     elasticSearchService.search("twitter", searchOptions, jsonResult -> {
         // Do something
     }); 
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    rxElasticSearchService.search("twitter")
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+        
+    final SearchOptions searchOptions = new SearchOptions()
+        .setQuery(new JsonObject("{\"match_all\": {}}"))
+        .setSearchType(SearchType.SCAN)
+        .setFetchSource(true)
+        .addFieldSort("id", SortOrder.DESC)
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, Collections.emptyMap(), SortOrder.DESC);
+        // etc.
+            
+    rxElasticSearchService.search("twitter", searchOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
 ```
 
 The event bus replies with a json message with a status `"ok"` or `"error"` along with the standard elastic search json search response.  See the documentation for details.
@@ -255,6 +320,7 @@ An example message would be:
 
 ```java
 {
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     elasticSearchService.searchScroll("c2Nhbjs1OzIxMTpyUkpzWnBIYVMzbVB0VGlaNHdjcWpnOzIxNTpyUkpzWnBI", jsonResult -> {
@@ -267,6 +333,23 @@ An example message would be:
     elasticSearchService.searchScroll("c2Nhbjs1OzIxMTpyUkpzWnBIYVMzbVB0VGlaNHdjcWpnOzIxNTpyUkpzWnBI", searchScrollOptions, jsonResult -> {
         // Do something
     });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+            
+    rxElasticSearchService.searchScroll("c2Nhbjs1OzIxMTpyUkpzWnBIYVMzbVB0VGlaNHdjcWpnOzIxNTpyUkpzWnBI")
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+       
+    final SearchScrollOptions searchScrollOptions = new SearchScrollOptions()
+        .setScroll("5m");
+    
+    rxElasticSearchService.searchScroll("c2Nhbjs1OzIxMTpyUkpzWnBIYVMzbVB0VGlaNHdjcWpnOzIxNTpyUkpzWnBI", searchScrollOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
 }
 ```
 
@@ -324,6 +407,7 @@ An example message would be:
 
 ```java
 {
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     elasticSearchService.suggest("twitter", jsonResult -> {
@@ -339,6 +423,26 @@ An example message would be:
     elasticSearchService.suggest("twitter", suggestOptions, jsonResult -> {
         // Do something
     });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+            
+    rxElasticSearchService.suggest("twitter")
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+        
+    final SuggestOptions suggestOptions = new SuggestOptions();
+    final CompletionSuggestOption completionSuggestOption = new CompletionSuggestOption()
+       .setText("the amsterdma meetpu");
+       // etc.
+    suggestOptions.addSuggestion("my-suggest-1", completionSuggestOption);
+    
+    rxElasticSearchService.suggest("twitter", suggestOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
 }
 ```
 
@@ -372,6 +476,7 @@ An example message would be:
 
 ```java
 {
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
            
     elasticSearchService.delete("twitter", "tweet", "123", jsonResult -> {
@@ -384,6 +489,23 @@ An example message would be:
     elasticSearchService.delete("twitter", "tweet", "123", deleteOptions, jsonResult -> {
         // Do something
     });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+           
+    rxElasticSearchService.delete("twitter", "tweet", "123")
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+        
+    final DeleteOptions deleteOptions = new DeleteOptions()
+        .setTimeout("10s");
+            
+    rxElasticSearchService.delete("twitter", "tweet", "123", deleteOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });;
 }
 ```
 
@@ -427,6 +549,7 @@ An example message would be:
 
 ```java
 {
+    // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
     final JsonObject query = new JsonObject("{\"match_all\": {}}");
            
@@ -437,9 +560,27 @@ An example message would be:
     final DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions()
         .setTimeout("10s");
         
-    elasticSearchService.delete("twitter", query, deleteByQueryOptions, deleteByQueryOptions, jsonResult -> {
+    elasticSearchService.delete("twitter", query, deleteByQueryOptions, jsonResult -> {
         // Do something
     });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    final JsonObject query = new JsonObject("{\"match_all\": {}}");
+              
+    rxElasticSearchService.deleteByQuery("twitter", query)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
+      
+    final DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions()
+        .setTimeout("10s");
+            
+    rxElasticSearchService.delete("twitter", query, deleteByQueryOptions)
+        .subscribe(jsonResult -> {
+            // Do something
+        });
 }
 ```
 

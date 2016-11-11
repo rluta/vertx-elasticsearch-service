@@ -22,19 +22,25 @@ import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchServiceVerticle;
 import com.hubrick.vertx.elasticsearch.IndexOptions;
+import com.hubrick.vertx.elasticsearch.RxElasticSearchAdminService;
+import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.SearchOptions;
 import com.hubrick.vertx.elasticsearch.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.VertxMatcherAssert;
 import com.hubrick.vertx.elasticsearch.impl.DefaultElasticSearchService;
+import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
+import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.rx.java.ObservableFuture;
+import io.vertx.rx.java.RxHelper;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.After;
@@ -47,6 +53,7 @@ import java.util.Collections;
 import java.util.Scanner;
 import java.util.UUID;
 
+import static com.hubrick.vertx.elasticsearch.VertxMatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
@@ -60,6 +67,9 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
 
     private ElasticSearchService service;
     private ElasticSearchAdminService adminService;
+    private RxElasticSearchService rxService;
+    private RxElasticSearchAdminService rxAdminService;
+
     private String id = "integration-test-1";
     private String index = "test_index";
     private String type = "test_type";
@@ -81,6 +91,8 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
 
         service = ElasticSearchService.createEventBusProxy(vertx, "et.elasticsearch");
         adminService = ElasticSearchAdminService.createEventBusProxy(vertx, "et.elasticsearch.admin");
+        rxService = new DefaultRxElasticSearchService(service);
+        rxAdminService = new DefaultRxElasticSearchAdminService(adminService);
     }
 
     @After
@@ -102,44 +114,42 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("2")));
 
         IndexOptions options = new IndexOptions().setId(id);
-        service.index(index, type, source, options, result -> {
+        rxService.index(index, type, source, options)
+                .subscribe(
+                        json -> {
+                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
+                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
+                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_ID), is(id));
+                            assertThat(testContext, json.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
 
-            VertxMatcherAssert.assertThat(testContext, result.succeeded(), is(true));
-            JsonObject json = result.result();
-
-            VertxMatcherAssert.assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
-            VertxMatcherAssert.assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
-            VertxMatcherAssert.assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_ID), is(id));
-            VertxMatcherAssert.assertThat(testContext, json.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
-
-            // Give elasticsearch time to index the document
-            vertx.setTimer(1000, id -> async.complete());
-
-        });
+                            // Give elasticsearch time to index the document
+                            vertx.setTimer(1000, id -> async.complete());
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
     public void test2Get(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        service.get(index, type, id, result -> {
+        rxService.get(index, type, id)
+                .subscribe(
+                        body -> {
+                            assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
+                            assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
+                            assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_ID), is(id));
+                            assertThat(testContext, body.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
 
-            VertxMatcherAssert.assertThat(testContext, result.succeeded(), is(true));
-            JsonObject body = result.result();
+                            JsonObject source = body.getJsonObject(DefaultElasticSearchService.CONST_SOURCE);
+                            assertThat(testContext, source, notNullValue());
+                            assertThat(testContext, source.getString("user"), is(source_user));
+                            assertThat(testContext, source.getString("message"), is(source_message));
 
-            VertxMatcherAssert.assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
-            VertxMatcherAssert.assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
-            VertxMatcherAssert.assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_ID), is(id));
-            VertxMatcherAssert.assertThat(testContext, body.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
-
-            JsonObject source = body.getJsonObject(DefaultElasticSearchService.CONST_SOURCE);
-            VertxMatcherAssert.assertThat(testContext, source, notNullValue());
-            VertxMatcherAssert.assertThat(testContext, source.getString("user"), is(source_user));
-            VertxMatcherAssert.assertThat(testContext, source.getString("message"), is(source_message));
-
-            async.complete();
-
-        });
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
@@ -157,14 +167,14 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 .addScriptField("script_field", "doc['message']", Collections.emptyMap())
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
-        service.search(index, options, result -> {
-
-            VertxMatcherAssert.assertThat(testContext, result.succeeded(), is(true));
-            JsonObject json = result.result();
-            VertxMatcherAssert.assertThat(testContext, json, notNullValue());
-            async.complete();
-
-        });
+        rxService.search(index, options)
+                .subscribe(
+                        json -> {
+                            assertThat(testContext, json, notNullValue());
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
@@ -179,9 +189,9 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         options.addHeader("action", "search");
 
         vertx.eventBus().<JsonObject>send("et.elasticsearch", json, options, res -> {
-            VertxMatcherAssert.assertThat(testContext, res.failed(), is(true));
+            assertThat(testContext, res.failed(), is(true));
             Throwable t = res.cause();
-            VertxMatcherAssert.assertThat(testContext, t, instanceOf(ReplyException.class));
+            assertThat(testContext, t, instanceOf(ReplyException.class));
             async.complete();
         });
     }
@@ -195,31 +205,26 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 .setScroll("5m")
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
-        service.search(index, options, result1 -> {
+        rxService.search(index, options)
+                .flatMap(json -> {
+                    String scrollId = json.getString("_scroll_id");
+                    assertThat(testContext, scrollId, notNullValue());
 
-            VertxMatcherAssert.assertThat(testContext, result1.succeeded(), is(true));
-            JsonObject json = result1.result();
+                    SearchScrollOptions scrollOptions = new SearchScrollOptions().setScroll("5m");
+                    return rxService.searchScroll(scrollId, scrollOptions);
+                })
+                .subscribe(
+                        json -> {
+                            JsonObject hits = json.getJsonObject("hits");
+                            assertThat(testContext, hits, notNullValue());
+                            JsonArray hitsArray = hits.getJsonArray("hits");
+                            assertThat(testContext, hitsArray, notNullValue());
+                            assertThat(testContext, hitsArray.size(), greaterThan(0));
 
-            String scrollId = json.getString("_scroll_id");
-            VertxMatcherAssert.assertThat(testContext, scrollId, notNullValue());
-
-            SearchScrollOptions scrollOptions = new SearchScrollOptions().setScroll("5m");
-
-            service.searchScroll(scrollId, scrollOptions, result2 -> {
-
-                VertxMatcherAssert.assertThat(testContext, result2.succeeded(), is(true));
-                JsonObject json2 = result2.result();
-
-                JsonObject hits = json2.getJsonObject("hits");
-                VertxMatcherAssert.assertThat(testContext, hits, notNullValue());
-                JsonArray hitsArray = hits.getJsonArray("hits");
-                VertxMatcherAssert.assertThat(testContext, hitsArray, notNullValue());
-                VertxMatcherAssert.assertThat(testContext, hitsArray.size(), greaterThan(0));
-
-                async.complete();
-            });
-
-        });
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
@@ -228,44 +233,40 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         final Async async = testContext.async();
         JsonObject mapping = readJson("mapping.json");
 
-        adminService.putMapping(index, type, mapping, result1 -> {
+        rxAdminService.putMapping(index, type, mapping)
+                .flatMap(result -> {
+                    JsonObject source = new JsonObject()
+                            .put("user", source_user)
+                            .put("message", source_message)
+                            .put("message_suggest", source_message);
 
-            VertxMatcherAssert.assertThat(testContext, result1.succeeded(), is(true));
-
-            JsonObject source = new JsonObject()
-                    .put("user", source_user)
-                    .put("message", source_message)
-                    .put("message_suggest", source_message);
-
-
-            service.index(index, type, source, result2 -> {
-
-                VertxMatcherAssert.assertThat(testContext, result2.succeeded(), is(true));
-
-                // Delay 1s to give time for indexing
-                vertx.setTimer(1000, id -> {
+                    return rxService.index(index, type, source);
+                })
+                .flatMap(result -> {
+                    final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+                    vertx.setTimer(1000, id -> observableFuture.toHandler().handle(Future.succeededFuture()));
+                    return observableFuture;
+                })
+                .flatMap(aVoid -> {
                     final SuggestOptions options = new SuggestOptions();
                     final CompletionSuggestOption completionSuggestOption = new CompletionSuggestOption()
                             .setText("v")
                             .setField("message_suggest");
                     options.addSuggestion("test-suggest", completionSuggestOption);
 
-                    service.suggest(index, options, result3 -> {
+                    return rxService.suggest(index, options);
+                })
+                .subscribe(
+                        json -> {
+                            assertThat(testContext, json.getJsonArray("test-suggest"), notNullValue());
+                            assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0), notNullValue());
+                            assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0).getInteger("length"), is(1));
+                            assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0).getJsonArray("options").getJsonObject(0).getString("text"), is(source_message));
 
-                        VertxMatcherAssert.assertThat(testContext, result3.succeeded(), is(true));
-                        JsonObject json = result3.result();
-
-                        VertxMatcherAssert.assertThat(testContext, json.getJsonArray("test-suggest"), notNullValue());
-                        VertxMatcherAssert.assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0), notNullValue());
-                        VertxMatcherAssert.assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0).getInteger("length"), is(1));
-                        VertxMatcherAssert.assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0).getJsonArray("options").getJsonObject(0).getString("text"), is(source_message));
-
-                        async.complete();
-                    });
-                });
-
-            });
-        });
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
@@ -283,52 +284,49 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         final UUID documentId = UUID.randomUUID();
         IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
 
-        service.index(index, type, source, indexOptions, indexResult -> {
+        rxService.index(index, type, source, indexOptions)
+                .flatMap(result -> {
+                    final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+                    vertx.setTimer(2000, id -> observableFuture.toHandler().handle(Future.succeededFuture()));
+                    return observableFuture;
+                })
+                .flatMap(aVoid -> {
+                    final DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions().setTimeout("1000");
+                    return rxService.deleteByQuery(index, new JsonObject().put("ids", new JsonObject().put("values", new JsonArray().add(documentId.toString()))), deleteByQueryOptions);
+                })
+                .subscribe(
+                        json -> {
+                            assertThat(testContext, json, notNullValue());
 
-            VertxMatcherAssert.assertThat(testContext, indexResult.succeeded(), is(true));
+                            assertThat(testContext, json.getJsonObject("_indices"), notNullValue());
+                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index), notNullValue());
+                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject("_all"), notNullValue());
+                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("found"), is(1));
+                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("deleted"), is(1));
+                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("failed"), is(0));
 
-            // Give elasticsearch time to index the document
-            vertx.setTimer(2000, id -> {
-                DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions()
-                        .setTimeout("1000");
-
-                service.deleteByQuery(index, new JsonObject().put("ids", new JsonObject().put("values", new JsonArray().add(documentId.toString()))), deleteByQueryOptions, deleteByQueryResult -> {
-
-                    VertxMatcherAssert.assertThat(testContext, deleteByQueryResult.succeeded(), is(true));
-                    JsonObject json = deleteByQueryResult.result();
-                    System.out.println(json);
-                    VertxMatcherAssert.assertThat(testContext, json, notNullValue());
-
-                    VertxMatcherAssert.assertThat(testContext, json.getJsonObject("_indices"), notNullValue());
-                    VertxMatcherAssert.assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index), notNullValue());
-                    VertxMatcherAssert.assertThat(testContext, json.getJsonObject("_indices").getJsonObject("_all"), notNullValue());
-                    VertxMatcherAssert.assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("found"), is(1));
-                    VertxMatcherAssert.assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("deleted"), is(1));
-                    VertxMatcherAssert.assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("failed"), is(0));
-
-                    async.complete();
-                });
-            });
-        });
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
     public void test99Delete(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        service.delete(index, type, id, result -> {
+        rxService.delete(index, type, id)
+                .subscribe(
+                        json -> {
+                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
+                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
+                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_ID), is(id));
+                            assertThat(testContext, json.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
 
-            VertxMatcherAssert.assertThat(testContext, result.succeeded(), is(true));
-            JsonObject json = result.result();
-
-            VertxMatcherAssert.assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
-            VertxMatcherAssert.assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
-            VertxMatcherAssert.assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_ID), is(id));
-            VertxMatcherAssert.assertThat(testContext, json.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
-
-            async.complete();
-
-        });
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     private JsonObject readConfig() {
