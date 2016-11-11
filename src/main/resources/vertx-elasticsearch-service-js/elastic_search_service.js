@@ -21,14 +21,14 @@ var Vertx = require('vertx-js/vertx');
 var io = Packages.io;
 var JsonObject = io.vertx.core.json.JsonObject;
 var JElasticSearchService = com.hubrick.vertx.elasticsearch.ElasticSearchService;
-var GetOptions = com.hubrick.vertx.elasticsearch.GetOptions;
-var DeleteOptions = com.hubrick.vertx.elasticsearch.DeleteOptions;
-var IndexOptions = com.hubrick.vertx.elasticsearch.IndexOptions;
-var SuggestOptions = com.hubrick.vertx.elasticsearch.SuggestOptions;
-var SearchOptions = com.hubrick.vertx.elasticsearch.SearchOptions;
-var UpdateOptions = com.hubrick.vertx.elasticsearch.UpdateOptions;
-var SearchScrollOptions = com.hubrick.vertx.elasticsearch.SearchScrollOptions;
-var DeleteByQueryOptions = com.hubrick.vertx.elasticsearch.DeleteByQueryOptions;
+var IndexOptions = com.hubrick.vertx.elasticsearch.model.IndexOptions;
+var UpdateOptions = com.hubrick.vertx.elasticsearch.model.UpdateOptions;
+var GetOptions = com.hubrick.vertx.elasticsearch.model.GetOptions;
+var SearchOptions = com.hubrick.vertx.elasticsearch.model.SearchOptions;
+var DeleteOptions = com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+var SuggestOptions = com.hubrick.vertx.elasticsearch.model.SuggestOptions;
+var SearchScrollOptions = com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
+var DeleteByQueryOptions = com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 
 /**
  ElasticSearch service
@@ -77,7 +77,7 @@ var ElasticSearchService = function(j_val) {
   this.index = function(index, type, source, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 5 && typeof __args[0] === 'string' && typeof __args[1] === 'string' && (typeof __args[2] === 'object' && __args[2] != null) && (typeof __args[3] === 'object' && __args[3] != null) && typeof __args[4] === 'function') {
-      j_elasticSearchService["index(java.lang.String,java.lang.String,io.vertx.core.json.JsonObject,com.hubrick.vertx.elasticsearch.IndexOptions,io.vertx.core.Handler)"](index, type, utils.convParamJsonObject(source), options != null ? new IndexOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["index(java.lang.String,java.lang.String,io.vertx.core.json.JsonObject,com.hubrick.vertx.elasticsearch.model.IndexOptions,io.vertx.core.Handler)"](index, type, utils.convParamJsonObject(source), options != null ? new IndexOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -100,7 +100,7 @@ var ElasticSearchService = function(j_val) {
   this.update = function(index, type, id, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 5 && typeof __args[0] === 'string' && typeof __args[1] === 'string' && typeof __args[2] === 'string' && (typeof __args[3] === 'object' && __args[3] != null) && typeof __args[4] === 'function') {
-      j_elasticSearchService["update(java.lang.String,java.lang.String,java.lang.String,com.hubrick.vertx.elasticsearch.UpdateOptions,io.vertx.core.Handler)"](index, type, id, options != null ? new UpdateOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["update(java.lang.String,java.lang.String,java.lang.String,com.hubrick.vertx.elasticsearch.model.UpdateOptions,io.vertx.core.Handler)"](index, type, id, options != null ? new UpdateOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -123,7 +123,7 @@ var ElasticSearchService = function(j_val) {
   this.get = function(index, type, id, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 5 && typeof __args[0] === 'string' && typeof __args[1] === 'string' && typeof __args[2] === 'string' && (typeof __args[3] === 'object' && __args[3] != null) && typeof __args[4] === 'function') {
-      j_elasticSearchService["get(java.lang.String,java.lang.String,java.lang.String,com.hubrick.vertx.elasticsearch.GetOptions,io.vertx.core.Handler)"](index, type, id, options != null ? new GetOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["get(java.lang.String,java.lang.String,java.lang.String,com.hubrick.vertx.elasticsearch.model.GetOptions,io.vertx.core.Handler)"](index, type, id, options != null ? new GetOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -143,7 +143,7 @@ var ElasticSearchService = function(j_val) {
   this.search = function(indices, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 3 && typeof __args[0] === 'object' && __args[0] instanceof Array && (typeof __args[1] === 'object' && __args[1] != null) && typeof __args[2] === 'function') {
-      j_elasticSearchService["search(java.util.List,com.hubrick.vertx.elasticsearch.SearchOptions,io.vertx.core.Handler)"](utils.convParamListBasicOther(indices), options != null ? new SearchOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["search(java.util.List,com.hubrick.vertx.elasticsearch.model.SearchOptions,io.vertx.core.Handler)"](utils.convParamListBasicOther(indices), options != null ? new SearchOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -164,7 +164,7 @@ var ElasticSearchService = function(j_val) {
   this.searchScroll = function(scrollId, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 3 && typeof __args[0] === 'string' && (typeof __args[1] === 'object' && __args[1] != null) && typeof __args[2] === 'function') {
-      j_elasticSearchService["searchScroll(java.lang.String,com.hubrick.vertx.elasticsearch.SearchScrollOptions,io.vertx.core.Handler)"](scrollId, options != null ? new SearchScrollOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["searchScroll(java.lang.String,com.hubrick.vertx.elasticsearch.model.SearchScrollOptions,io.vertx.core.Handler)"](scrollId, options != null ? new SearchScrollOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -187,7 +187,7 @@ var ElasticSearchService = function(j_val) {
   this.delete = function(index, type, id, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 5 && typeof __args[0] === 'string' && typeof __args[1] === 'string' && typeof __args[2] === 'string' && (typeof __args[3] === 'object' && __args[3] != null) && typeof __args[4] === 'function') {
-      j_elasticSearchService["delete(java.lang.String,java.lang.String,java.lang.String,com.hubrick.vertx.elasticsearch.DeleteOptions,io.vertx.core.Handler)"](index, type, id, options != null ? new DeleteOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["delete(java.lang.String,java.lang.String,java.lang.String,com.hubrick.vertx.elasticsearch.model.DeleteOptions,io.vertx.core.Handler)"](index, type, id, options != null ? new DeleteOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -208,7 +208,7 @@ var ElasticSearchService = function(j_val) {
   this.suggest = function(indices, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 3 && typeof __args[0] === 'object' && __args[0] instanceof Array && (typeof __args[1] === 'object' && __args[1] != null) && typeof __args[2] === 'function') {
-      j_elasticSearchService["suggest(java.util.List,com.hubrick.vertx.elasticsearch.SuggestOptions,io.vertx.core.Handler)"](utils.convParamListBasicOther(indices), options != null ? new SuggestOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["suggest(java.util.List,com.hubrick.vertx.elasticsearch.model.SuggestOptions,io.vertx.core.Handler)"](utils.convParamListBasicOther(indices), options != null ? new SuggestOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {
@@ -230,7 +230,7 @@ var ElasticSearchService = function(j_val) {
   this.deleteByQuery = function(indices, query, options, resultHandler) {
     var __args = arguments;
     if (__args.length === 4 && typeof __args[0] === 'object' && __args[0] instanceof Array && (typeof __args[1] === 'object' && __args[1] != null) && (typeof __args[2] === 'object' && __args[2] != null) && typeof __args[3] === 'function') {
-      j_elasticSearchService["deleteByQuery(java.util.List,io.vertx.core.json.JsonObject,com.hubrick.vertx.elasticsearch.DeleteByQueryOptions,io.vertx.core.Handler)"](utils.convParamListBasicOther(indices), utils.convParamJsonObject(query), options != null ? new DeleteByQueryOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      j_elasticSearchService["deleteByQuery(java.util.List,io.vertx.core.json.JsonObject,com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions,io.vertx.core.Handler)"](utils.convParamListBasicOther(indices), utils.convParamJsonObject(query), options != null ? new DeleteByQueryOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnJson(ar.result()), null);
       } else {

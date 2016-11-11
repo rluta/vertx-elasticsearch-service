@@ -15,6 +15,8 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
+import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 import io.vertx.core.json.JsonObject;
 import org.junit.Test;
 

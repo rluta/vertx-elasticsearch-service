@@ -15,7 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
-import com.hubrick.vertx.elasticsearch.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.index.IndexRequest;

@@ -15,8 +15,8 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
-import com.hubrick.vertx.elasticsearch.ScriptSortOption;
-import com.hubrick.vertx.elasticsearch.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
+import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.script.ScriptService;

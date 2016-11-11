@@ -16,6 +16,14 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.GetOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
+import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
+import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import rx.Observable;

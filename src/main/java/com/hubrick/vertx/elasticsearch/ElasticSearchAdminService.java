@@ -15,6 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
+import com.hubrick.vertx.elasticsearch.model.MappingOptions;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.ProxyIgnore;

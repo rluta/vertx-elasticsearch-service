@@ -15,7 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
-import com.hubrick.vertx.elasticsearch.GetOptions;
+import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import io.vertx.core.json.JsonObject;
 import org.junit.Test;
 

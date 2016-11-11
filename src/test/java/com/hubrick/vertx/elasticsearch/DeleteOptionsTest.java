@@ -15,7 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
-import com.hubrick.vertx.elasticsearch.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.index.VersionType;

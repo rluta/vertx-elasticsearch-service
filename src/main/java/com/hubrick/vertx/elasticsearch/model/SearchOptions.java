@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hubrick.vertx.elasticsearch;
+package com.hubrick.vertx.elasticsearch.model;
 
 import com.google.common.base.Strings;
 import io.vertx.codegen.annotations.DataObject;

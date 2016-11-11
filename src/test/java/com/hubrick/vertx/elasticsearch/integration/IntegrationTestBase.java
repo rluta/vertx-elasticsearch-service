@@ -16,18 +16,18 @@
 package com.hubrick.vertx.elasticsearch.integration;
 
 import com.hubrick.vertx.elasticsearch.AbstractVertxIntegrationTest;
-import com.hubrick.vertx.elasticsearch.CompletionSuggestOption;
-import com.hubrick.vertx.elasticsearch.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchServiceVerticle;
-import com.hubrick.vertx.elasticsearch.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
-import com.hubrick.vertx.elasticsearch.ScriptSortOption;
-import com.hubrick.vertx.elasticsearch.SearchOptions;
-import com.hubrick.vertx.elasticsearch.SearchScrollOptions;
-import com.hubrick.vertx.elasticsearch.SuggestOptions;
+import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
+import com.hubrick.vertx.elasticsearch.model.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
+import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 import com.hubrick.vertx.elasticsearch.impl.DefaultElasticSearchService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;

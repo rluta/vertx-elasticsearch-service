@@ -15,16 +15,16 @@
  */
 package com.hubrick.vertx.elasticsearch.impl;
 
-import com.hubrick.vertx.elasticsearch.DeleteByQueryOptions;
-import com.hubrick.vertx.elasticsearch.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
-import com.hubrick.vertx.elasticsearch.GetOptions;
-import com.hubrick.vertx.elasticsearch.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.GetOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
-import com.hubrick.vertx.elasticsearch.SearchOptions;
-import com.hubrick.vertx.elasticsearch.SearchScrollOptions;
-import com.hubrick.vertx.elasticsearch.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.UpdateOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
+import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
+import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rx.java.ObservableFuture;
 import io.vertx.rx.java.RxHelper;

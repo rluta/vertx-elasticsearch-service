@@ -16,7 +16,7 @@
 package com.hubrick.vertx.elasticsearch.impl;
 
 import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
-import com.hubrick.vertx.elasticsearch.MappingOptions;
+import com.hubrick.vertx.elasticsearch.model.MappingOptions;
 import com.hubrick.vertx.elasticsearch.internal.InternalElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.internal.InternalElasticSearchService;
 import io.vertx.core.AsyncResult;

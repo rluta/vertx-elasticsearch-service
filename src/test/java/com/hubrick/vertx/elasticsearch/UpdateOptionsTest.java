@@ -15,7 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
-import com.hubrick.vertx.elasticsearch.UpdateOptions;
+import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.script.ScriptService;
 import org.junit.Test;
