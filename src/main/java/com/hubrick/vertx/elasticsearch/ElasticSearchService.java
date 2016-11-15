@@ -16,13 +16,20 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteResponse;
 import com.hubrick.vertx.elasticsearch.model.GetOptions;
+import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
+import com.hubrick.vertx.elasticsearch.model.SuggestResponse;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
+import com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.ProxyIgnore;
@@ -63,7 +70,7 @@ public interface ElasticSearchService {
      */
     @GenIgnore
     @ProxyIgnore
-    default void index(String index, String type, JsonObject source, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void index(String index, String type, JsonObject source, Handler<AsyncResult<IndexResponse>> resultHandler) {
         index(index, type, source, new IndexOptions(), resultHandler);
     }
 
@@ -76,7 +83,7 @@ public interface ElasticSearchService {
      * @param options       optional index options (id, timeout, ttl, etc.)
      * @param resultHandler result handler callback
      */
-    void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<IndexResponse>> resultHandler);
 
     /**
      * http://www.elastic.co/guide/en/elasticsearch/client/java-api/1.4/java-update-api.html
@@ -87,7 +94,7 @@ public interface ElasticSearchService {
      * @param options       the update options (doc, script, etc.)
      * @param resultHandler result handler callback
      */
-    void update(String index, String type, String id, UpdateOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void update(String index, String type, String id, UpdateOptions options, Handler<AsyncResult<UpdateResponse>> resultHandler);
 
     /**
      * http://www.elastic.co/guide/en/elasticsearch/client/java-api/1.4/get.html
@@ -99,7 +106,7 @@ public interface ElasticSearchService {
      */
     @GenIgnore
     @ProxyIgnore
-    default void get(String index, String type, String id, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void get(String index, String type, String id, Handler<AsyncResult<GetResponse>> resultHandler) {
         get(index, type, id, new GetOptions(), resultHandler);
     }
 
@@ -112,31 +119,31 @@ public interface ElasticSearchService {
      * @param options       the update options
      * @param resultHandler result handler callback
      */
-    void get(String index, String type, String id, GetOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void get(String index, String type, String id, GetOptions options, Handler<AsyncResult<GetResponse>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore
-    default void search(String index, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void search(String index, Handler<AsyncResult<SearchResponse>> resultHandler) {
         search(index, new SearchOptions(), resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void search(String index, SearchOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void search(String index, SearchOptions options, Handler<AsyncResult<SearchResponse>> resultHandler) {
         search(Collections.singletonList(index), options, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void search(List<String> indices, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void search(List<String> indices, Handler<AsyncResult<SearchResponse>> resultHandler) {
         search(indices, new SearchOptions(), resultHandler);
     }
 
-    void search(List<String> indices, SearchOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void search(List<String> indices, SearchOptions options, Handler<AsyncResult<SearchResponse>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore
-    default void searchScroll(String scrollId, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void searchScroll(String scrollId, Handler<AsyncResult<SearchResponse>> resultHandler) {
         searchScroll(scrollId, new SearchScrollOptions(), resultHandler);
     }
 
@@ -147,7 +154,7 @@ public interface ElasticSearchService {
      * @param options
      * @param resultHandler
      */
-    void searchScroll(String scrollId, SearchScrollOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void searchScroll(String scrollId, SearchScrollOptions options, Handler<AsyncResult<SearchResponse>> resultHandler);
 
     /**
      * http://www.elastic.co/guide/en/elasticsearch/client/java-api/1.4/delete.html
@@ -159,7 +166,7 @@ public interface ElasticSearchService {
      */
     @GenIgnore
     @ProxyIgnore
-    default void delete(String index, String type, String id, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void delete(String index, String type, String id, Handler<AsyncResult<DeleteResponse>> resultHandler) {
         delete(index, type, id, new DeleteOptions(), resultHandler);
     }
 
@@ -172,23 +179,23 @@ public interface ElasticSearchService {
      * @param options       optional delete options (timeout, etc.)
      * @param resultHandler result handler callback
      */
-    void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<DeleteResponse>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore
-    default void suggest(String index, SuggestOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void suggest(String index, SuggestOptions options, Handler<AsyncResult<SuggestResponse>> resultHandler) {
         suggest(Collections.singletonList(index), options, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void suggest(String index, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void suggest(String index, Handler<AsyncResult<SuggestResponse>> resultHandler) {
         suggest(Collections.singletonList(index), new SuggestOptions(), resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void suggest(List<String> indices, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void suggest(List<String> indices, Handler<AsyncResult<SuggestResponse>> resultHandler) {
         suggest(indices, new SuggestOptions(), resultHandler);
     }
 
@@ -199,24 +206,24 @@ public interface ElasticSearchService {
      * @param options       optional suggest options
      * @param resultHandler result handler callback
      */
-    void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<SuggestResponse>> resultHandler);
 
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
         deleteByQuery(Collections.singletonList(index), query, options, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteByQuery(String index, JsonObject query, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void deleteByQuery(String index, JsonObject query, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
         deleteByQuery(Collections.singletonList(index), query, new DeleteByQueryOptions(), resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteByQuery(List<String> indices, JsonObject query, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void deleteByQuery(List<String> indices, JsonObject query, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
         deleteByQuery(indices, query, new DeleteByQueryOptions(), resultHandler);
     }
 
@@ -228,5 +235,5 @@ public interface ElasticSearchService {
      * @param options       delete by query options (timeout, etc.)
      * @param resultHandler result handler callback
      */
-    void deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler);
 }

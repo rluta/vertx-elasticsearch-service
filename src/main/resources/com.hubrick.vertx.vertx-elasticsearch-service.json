@@ -4,7 +4,7 @@
         "worker": false,
         "config": {
             "hk2_binder": [
-                "com.hubrick.vertx.hk2.ElasticSearchBinder"
+                "com.hubrick.vertx.elasticsearch.hk2.ElasticSearchBinder"
             ],
             "address": "et.elasticsearch"
         }

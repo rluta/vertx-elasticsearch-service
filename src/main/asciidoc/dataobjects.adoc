@@ -1,5 +1,24 @@
 = Cheatsheets
 
+[[Aggregation]]
+== Aggregation
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[score]]`score`|`Number (Float)`|-
+|[[source]]`source`|`Json object`|-
+|[[type]]`type`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
+|===
+
 [[BaseSortOption]]
 == BaseSortOption
 
@@ -27,7 +46,7 @@
 [frame="topbot"]
 |===
 ^|Name | Type ^| Description
-|[[suggestType]]`suggestType`|`link:enums.html#SuggestType[SuggestType]`|-
+|[[suggestionType]]`suggestionType`|`link:enums.html#SuggestionType[SuggestionType]`|-
 |===
 
 [[CompletionSuggestOption]]
@@ -43,7 +62,7 @@
 ^|Name | Type ^| Description
 |[[field]]`field`|`String`|-
 |[[size]]`size`|`Number (Integer)`|-
-|[[suggestType]]`suggestType`|`link:enums.html#SuggestType[SuggestType]`|-
+|[[suggestionType]]`suggestionType`|`link:enums.html#SuggestionType[SuggestionType]`|-
 |[[text]]`text`|`String`|-
 |===
 
@@ -62,6 +81,23 @@
 |[[routing]]`routing`|`String`|-
 |[[timeout]]`timeout`|`String`|-
 |[[types]]`types`|`Array of String`|-
+|===
+
+[[DeleteByQueryResponse]]
+== DeleteByQueryResponse
+
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[timedOut]]`timedOut`|`Boolean`|-
+|[[took]]`took`|`Number (Long)`|-
+|[[totalDeleted]]`totalDeleted`|`Number (Long)`|-
+|[[totalFailed]]`totalFailed`|`Number (Long)`|-
+|[[totalFound]]`totalFound`|`Number (Long)`|-
+|[[totalMissing]]`totalMissing`|`Number (Long)`|-
 |===
 
 [[DeleteOptions]]
@@ -83,6 +119,36 @@
 |[[timeout]]`timeout`|`String`|-
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
+|===
+
+[[DeleteResponse]]
+== DeleteResponse
+
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[found]]`found`|`Boolean`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[type]]`type`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
+|===
+
+[[Field]]
+== Field
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[name]]`name`|`String`|-
 |===
 
 [[FieldSortOption]]
@@ -129,6 +195,72 @@
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
 |===
 
+[[GetResponse]]
+== GetResponse
+
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[result]]`result`|`link:dataobjects.html#GetResult[GetResult]`|-
+|===
+
+[[GetResult]]
+== GetResult
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[exists]]`exists`|`Boolean`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[source]]`source`|`Json object`|-
+|[[type]]`type`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
+|===
+
+[[Hit]]
+== Hit
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[score]]`score`|`Number (Float)`|-
+|[[source]]`source`|`Json object`|-
+|[[type]]`type`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
+|===
+
+[[Hits]]
+== Hits
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[hits]]`hits`|`Array of link:dataobjects.html#Hit[Hit]`|-
+|[[maxScore]]`maxScore`|`Number (Float)`|-
+|[[total]]`total`|`Number (Long)`|-
+|===
+
 [[IndexOptions]]
 == IndexOptions
 
@@ -152,6 +284,22 @@
 |[[ttl]]`ttl`|`Number (Long)`|-
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
+|===
+
+[[IndexResponse]]
+== IndexResponse
+
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[created]]`created`|`Boolean`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[type]]`type`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
 |===
 
 [[MappingOptions]]
@@ -242,6 +390,28 @@
 |[[version]]`version`|`Boolean`|-
 |===
 
+[[SearchResponse]]
+== SearchResponse
+
+++++
+ Search operation options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[aggregations]]`aggregations`|`Json object`|-
+|[[hits]]`hits`|`link:dataobjects.html#Hits[Hits]`|-
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[scrollId]]`scrollId`|`String`|-
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[suggestions]]`suggestions`|`link:dataobjects.html#Suggestion[Suggestion]`|-
+|[[timedOut]]`timedOut`|`Boolean`|-
+|[[took]]`took`|`Number (Long)`|-
+|===
+
 [[SearchScrollOptions]]
 == SearchScrollOptions
 
@@ -255,6 +425,22 @@
 |===
 ^|Name | Type ^| Description
 |[[scroll]]`scroll`|`String`|-
+|===
+
+[[Shards]]
+== Shards
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[failed]]`failed`|`Number (Integer)`|-
+|[[successful]]`successful`|`Number (Integer)`|-
+|[[total]]`total`|`Number (Integer)`|-
 |===
 
 [[SuggestOptions]]
@@ -274,6 +460,69 @@
 |[[suggestions]]`suggestions`|`link:dataobjects.html#BaseSuggestOption[BaseSuggestOption]`|-
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
+|===
+
+[[SuggestResponse]]
+== SuggestResponse
+
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[suggestions]]`suggestions`|`link:dataobjects.html#Suggestion[Suggestion]`|-
+|===
+
+[[Suggestion]]
+== Suggestion
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[entries]]`entries`|`Array of link:dataobjects.html#SuggestionEntry[SuggestionEntry]`|-
+|[[name]]`name`|`String`|-
+|[[size]]`size`|`Number (Integer)`|-
+|[[suggestionType]]`suggestionType`|`link:enums.html#SuggestionType[SuggestionType]`|-
+|===
+
+[[SuggestionEntry]]
+== SuggestionEntry
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[length]]`length`|`Number (Integer)`|-
+|[[offset]]`offset`|`Number (Integer)`|-
+|[[options]]`options`|`Array of link:dataobjects.html#SuggestionEntryOption[SuggestionEntryOption]`|-
+|[[text]]`text`|`String`|-
+|===
+
+[[SuggestionEntryOption]]
+== SuggestionEntryOption
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[highlight]]`highlight`|`String`|-
+|[[score]]`score`|`Number (Float)`|-
+|[[text]]`text`|`String`|-
 |===
 
 [[UpdateOptions]]
@@ -306,5 +555,22 @@
 |[[upsert]]`upsert`|`Json object`|-
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
+|===
+
+[[UpdateResponse]]
+== UpdateResponse
+
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[created]]`created`|`Boolean`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[result]]`result`|`link:dataobjects.html#GetResult[GetResult]`|-
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[type]]`type`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
 |===
 

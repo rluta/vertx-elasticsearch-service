@@ -25,16 +25,16 @@ import io.vertx.core.json.JsonObject;
 @DataObject
 public class CompletionSuggestOption extends BaseSuggestOption {
 
-    public static final String FIELD_SUGGESTION_TEXT = "suggestionText";
-    public static final String FIELD_SUGGESTION_FIELD = "suggestionField";
-    public static final String FIELD_SUGGESTION_SIZE = "suggestionSize";
+    public static final String FIELD_SUGGESTION_TEXT = "text";
+    public static final String FIELD_SUGGESTION_FIELD = "field";
+    public static final String FIELD_SUGGESTION_SIZE = "size";
 
     private String text;
     private String field;
     private Integer size;
 
     public CompletionSuggestOption() {
-        super(SuggestType.COMPLETION);
+        super(SuggestionType.COMPLETION);
     }
 
     public CompletionSuggestOption(CompletionSuggestOption other) {

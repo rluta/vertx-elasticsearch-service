@@ -16,21 +16,20 @@
 package com.hubrick.vertx.elasticsearch.integration;
 
 import com.hubrick.vertx.elasticsearch.AbstractVertxIntegrationTest;
-import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
-import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchServiceVerticle;
-import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
+import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
+import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
+import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.impl.DefaultElasticSearchService;
-import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
-import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -116,11 +115,12 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         IndexOptions options = new IndexOptions().setId(id);
         rxService.index(index, type, source, options)
                 .subscribe(
-                        json -> {
-                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
-                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
-                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_ID), is(id));
-                            assertThat(testContext, json.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
+                        indexResponse -> {
+                            assertThat(testContext, indexResponse.getIndex(), is(index));
+                            assertThat(testContext, indexResponse.getType(), is(type));
+                            assertThat(testContext, indexResponse.getId(), is(id));
+                            assertThat(testContext, indexResponse.getCreated(), is(true));
+                            assertThat(testContext, indexResponse.getVersion(), greaterThan(0l));
 
                             // Give elasticsearch time to index the document
                             vertx.setTimer(1000, id -> async.complete());
@@ -135,16 +135,16 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         final Async async = testContext.async();
         rxService.get(index, type, id)
                 .subscribe(
-                        body -> {
-                            assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
-                            assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
-                            assertThat(testContext, body.getString(DefaultElasticSearchService.CONST_ID), is(id));
-                            assertThat(testContext, body.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
+                        getResponse -> {
+                            assertThat(testContext, getResponse.getResult().getIndex(), is(index));
+                            assertThat(testContext, getResponse.getResult().getType(), is(type));
+                            assertThat(testContext, getResponse.getResult().getId(), is(id));
+                            assertThat(testContext, getResponse.getResult().getExists(), is(true));
+                            assertThat(testContext, getResponse.getResult().getVersion(), greaterThan(0l));
 
-                            JsonObject source = body.getJsonObject(DefaultElasticSearchService.CONST_SOURCE);
-                            assertThat(testContext, source, notNullValue());
-                            assertThat(testContext, source.getString("user"), is(source_user));
-                            assertThat(testContext, source.getString("message"), is(source_message));
+                            assertThat(testContext, getResponse.getResult().getSource(), notNullValue());
+                            assertThat(testContext, getResponse.getResult().getSource().getString("user"), is(source_user));
+                            assertThat(testContext, getResponse.getResult().getSource().getString("message"), is(source_message));
 
                             async.complete();
                         },
@@ -206,20 +206,16 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
         rxService.search(index, options)
-                .flatMap(json -> {
-                    String scrollId = json.getString("_scroll_id");
+                .flatMap(searchResponse -> {
+                    String scrollId = searchResponse.getScrollId();
                     assertThat(testContext, scrollId, notNullValue());
 
                     SearchScrollOptions scrollOptions = new SearchScrollOptions().setScroll("5m");
                     return rxService.searchScroll(scrollId, scrollOptions);
                 })
                 .subscribe(
-                        json -> {
-                            JsonObject hits = json.getJsonObject("hits");
-                            assertThat(testContext, hits, notNullValue());
-                            JsonArray hitsArray = hits.getJsonArray("hits");
-                            assertThat(testContext, hitsArray, notNullValue());
-                            assertThat(testContext, hitsArray.size(), greaterThan(0));
+                        searchResponse -> {
+                            assertThat(testContext,  searchResponse.getHits().getHits().size(), greaterThan(0));
 
                             async.complete();
                         },
@@ -257,11 +253,12 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                     return rxService.suggest(index, options);
                 })
                 .subscribe(
-                        json -> {
-                            assertThat(testContext, json.getJsonArray("test-suggest"), notNullValue());
-                            assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0), notNullValue());
-                            assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0).getInteger("length"), is(1));
-                            assertThat(testContext, json.getJsonArray("test-suggest").getJsonObject(0).getJsonArray("options").getJsonObject(0).getString("text"), is(source_message));
+                        suggestResponse -> {
+                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest"), notNullValue());
+                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getSize(), is(1));
+                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getEntries().get(0), notNullValue());
+                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getEntries().get(0).getLength(), is(1));
+                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getEntries().get(0).getOptions().get(0).getText(), is(source_message));
 
                             async.complete();
                         },
@@ -295,15 +292,10 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                     return rxService.deleteByQuery(index, new JsonObject().put("ids", new JsonObject().put("values", new JsonArray().add(documentId.toString()))), deleteByQueryOptions);
                 })
                 .subscribe(
-                        json -> {
-                            assertThat(testContext, json, notNullValue());
-
-                            assertThat(testContext, json.getJsonObject("_indices"), notNullValue());
-                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index), notNullValue());
-                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject("_all"), notNullValue());
-                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("found"), is(1));
-                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("deleted"), is(1));
-                            assertThat(testContext, json.getJsonObject("_indices").getJsonObject(index).getInteger("failed"), is(0));
+                        deleteByQueryResponse -> {
+                            assertThat(testContext, deleteByQueryResponse.getTotalFound(), is(1l));
+                            assertThat(testContext, deleteByQueryResponse.getTotalDeleted(), is(1l));
+                            assertThat(testContext, deleteByQueryResponse.getTotalFailed(), is(0l));
 
                             async.complete();
                         },
@@ -317,11 +309,12 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         final Async async = testContext.async();
         rxService.delete(index, type, id)
                 .subscribe(
-                        json -> {
-                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_INDEX), is(index));
-                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_TYPE), is(type));
-                            assertThat(testContext, json.getString(DefaultElasticSearchService.CONST_ID), is(id));
-                            assertThat(testContext, json.getInteger(DefaultElasticSearchService.CONST_VERSION, 0), greaterThan(0));
+                        deleteResponse -> {
+                            assertThat(testContext, deleteResponse.getIndex(), is(index));
+                            assertThat(testContext, deleteResponse.getType(), is(type));
+                            assertThat(testContext, deleteResponse.getId(), is(id));
+                            assertThat(testContext, deleteResponse.getFound(), is(true));
+                            assertThat(testContext, deleteResponse.getVersion(), greaterThan(0l));
 
                             async.complete();
                         },

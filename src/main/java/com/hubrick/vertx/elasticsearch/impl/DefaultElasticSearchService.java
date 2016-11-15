@@ -15,13 +15,15 @@
  */
 package com.hubrick.vertx.elasticsearch.impl;
 
+import com.hubrick.vertx.elasticsearch.ElasticSearchConfigurator;
+import com.hubrick.vertx.elasticsearch.ElasticSearchService;
+import com.hubrick.vertx.elasticsearch.TransportClientFactory;
+import com.hubrick.vertx.elasticsearch.internal.InternalElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.BaseSortOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
-import com.hubrick.vertx.elasticsearch.ElasticSearchConfigurator;
-import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.FieldSortOption;
 import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
@@ -29,13 +31,13 @@ import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.TransportClientFactory;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
-import com.hubrick.vertx.elasticsearch.internal.InternalElasticSearchService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
@@ -56,9 +58,6 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.script.Template;
@@ -66,26 +65,26 @@ import org.elasticsearch.search.sort.ScriptSortBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteByQueryResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToIndexResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSearchResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSuggestResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToUpdateResponse;
 
 /**
  * Default implementation of {@link ElasticSearchService}
  */
 public class DefaultElasticSearchService implements InternalElasticSearchService {
 
+    private final Logger log = LoggerFactory.getLogger(DefaultElasticSearchService.class);
     private final TransportClientFactory clientFactory;
     private final ElasticSearchConfigurator configurator;
     protected TransportClient client;
-
-    public static final String CONST_ID = "id";
-    public static final String CONST_INDEX = "index";
-    public static final String CONST_TYPE = "type";
-    public static final String CONST_VERSION = "version";
-    public static final String CONST_SOURCE = "source";
-    public static final String CONST_CREATED = "created";
 
     public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
 
@@ -117,7 +116,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.IndexResponse>> resultHandler) {
 
         IndexRequestBuilder builder = client.prepareIndex(index, type)
                 .setSource(source.encode());
@@ -139,13 +138,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         builder.execute(new ActionListener<IndexResponse>() {
             @Override
             public void onResponse(IndexResponse indexResponse) {
-                JsonObject result = new JsonObject()
-                        .put(CONST_INDEX, indexResponse.getIndex())
-                        .put(CONST_TYPE, indexResponse.getType())
-                        .put(CONST_ID, indexResponse.getId())
-                        .put(CONST_VERSION, indexResponse.getVersion())
-                        .put(CONST_CREATED, indexResponse.isCreated());
-                resultHandler.handle(Future.succeededFuture(result));
+                resultHandler.handle(Future.succeededFuture(mapToIndexResponse(indexResponse)));
             }
 
             @Override
@@ -157,7 +150,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void update(String index, String type, String id, UpdateOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void update(String index, String type, String id, UpdateOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.UpdateResponse>> resultHandler) {
 
         UpdateRequestBuilder builder = client.prepareUpdate(index, type, id);
 
@@ -193,13 +186,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         builder.execute(new ActionListener<UpdateResponse>() {
             @Override
             public void onResponse(UpdateResponse updateResponse) {
-                JsonObject result = new JsonObject()
-                        .put(CONST_INDEX, updateResponse.getIndex())
-                        .put(CONST_TYPE, updateResponse.getType())
-                        .put(CONST_ID, updateResponse.getId())
-                        .put(CONST_VERSION, updateResponse.getVersion())
-                        .put(CONST_CREATED, updateResponse.isCreated());
-                resultHandler.handle(Future.succeededFuture(result));
+                resultHandler.handle(Future.succeededFuture(mapToUpdateResponse(updateResponse)));
             }
 
             @Override
@@ -211,7 +198,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void get(String index, String type, String id, GetOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void get(String index, String type, String id, GetOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.GetResponse>> resultHandler) {
 
         GetRequestBuilder builder = client.prepareGet(index, type, id);
 
@@ -242,14 +229,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         builder.execute(new ActionListener<GetResponse>() {
             @Override
             public void onResponse(GetResponse getResponse) {
-                JsonObject source = (getResponse.isExists() ? new JsonObject(getResponse.getSourceAsString()) : null);
-                JsonObject reply = new JsonObject()
-                        .put(CONST_INDEX, getResponse.getIndex())
-                        .put(CONST_TYPE, getResponse.getType())
-                        .put(CONST_ID, getResponse.getId())
-                        .put(CONST_VERSION, getResponse.getVersion())
-                        .put(CONST_SOURCE, source);
-                resultHandler.handle(Future.succeededFuture(reply));
+                resultHandler.handle(Future.succeededFuture(mapToUpdateResponse(getResponse)));
             }
 
             @Override
@@ -261,7 +241,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void search(List<String> indices, SearchOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void search(List<String> indices, SearchOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SearchResponse>> resultHandler) {
 
         SearchRequestBuilder builder = client.prepareSearch(indices.toArray(new String[indices.size()]));
 
@@ -324,8 +304,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         builder.execute(new ActionListener<SearchResponse>() {
             @Override
             public void onResponse(SearchResponse searchResponse) {
-                JsonObject json = readResponse(searchResponse);
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture(mapToSearchResponse(searchResponse)));
             }
 
             @Override
@@ -336,7 +315,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void searchScroll(String scrollId, SearchScrollOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void searchScroll(String scrollId, SearchScrollOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SearchResponse>> resultHandler) {
 
         SearchScrollRequestBuilder builder = client.prepareSearchScroll(scrollId);
 
@@ -347,8 +326,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         builder.execute(new ActionListener<SearchResponse>() {
             @Override
             public void onResponse(SearchResponse searchResponse) {
-                JsonObject json = readResponse(searchResponse);
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture(mapToSearchResponse(searchResponse)));
             }
 
             @Override
@@ -360,7 +338,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.DeleteResponse>> resultHandler) {
 
         DeleteRequestBuilder builder = client.prepareDelete(index, type, id);
 
@@ -377,12 +355,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         builder.execute(new ActionListener<DeleteResponse>() {
             @Override
             public void onResponse(DeleteResponse deleteResponse) {
-                JsonObject json = new JsonObject()
-                        .put(CONST_INDEX, deleteResponse.getIndex())
-                        .put(CONST_TYPE, deleteResponse.getType())
-                        .put(CONST_ID, deleteResponse.getId())
-                        .put(CONST_VERSION, deleteResponse.getVersion());
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture(mapToDeleteResponse(deleteResponse)));
             }
 
             @Override
@@ -394,13 +367,13 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SuggestResponse>> resultHandler) {
 
         final SuggestRequestBuilder builder = client.prepareSuggest(indices.toArray(new String[indices.size()]));
 
         if (options != null && !options.getSuggestions().isEmpty()) {
             for (Map.Entry<String, BaseSuggestOption> suggestOptionEntry : options.getSuggestions().entrySet()) {
-                switch (suggestOptionEntry.getValue().getSuggestType()) {
+                switch (suggestOptionEntry.getValue().getSuggestionType()) {
                     case COMPLETION:
                         final CompletionSuggestOption completionSuggestOption = (CompletionSuggestOption) suggestOptionEntry.getValue();
                         final CompletionSuggestionBuilder completionBuilder = new CompletionSuggestionBuilder(suggestOptionEntry.getKey());
@@ -418,15 +391,13 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                         break;
                 }
             }
-
         }
 
         builder.execute(new ActionListener<SuggestResponse>() {
 
             @Override
             public void onResponse(SuggestResponse suggestResponse) {
-                JsonObject json = readResponse(suggestResponse.getSuggest());
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture(mapToSuggestResponse(suggestResponse)));
             }
 
             @Override
@@ -438,7 +409,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse>> resultHandler) {
         final DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
                 .setIndices(indices.toArray(new String[indices.size()]));
 
@@ -457,8 +428,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         deleteByQueryRequestBuilder.execute(new ActionListener<DeleteByQueryResponse>() {
             @Override
             public void onResponse(DeleteByQueryResponse deleteByQueryResponse) {
-                JsonObject json = readResponse(deleteByQueryResponse);
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture(mapToDeleteByQueryResponse(deleteByQueryResponse)));
             }
 
             @Override
@@ -473,21 +443,9 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         return client;
     }
 
-    protected JsonObject readResponse(ToXContent toXContent) {
-        try {
-            XContentBuilder builder = XContentFactory.jsonBuilder();
-            builder.startObject();
-            toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
-            builder.endObject();
+    private <T> void handleFailure(final Handler<AsyncResult<T>> resultHandler, final Throwable t) {
+        log.error("Error occurred in ElasticSearchService", t);
 
-            return new JsonObject(builder.string());
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void handleFailure(final Handler<AsyncResult<JsonObject>> resultHandler, final Throwable t) {
         if (t instanceof ElasticsearchException) {
             final ElasticsearchException esException = (ElasticsearchException) t;
             resultHandler.handle(Future.failedFuture(esException.getDetailedMessage()));
