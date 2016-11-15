@@ -17,13 +17,20 @@ package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteResponse;
 import com.hubrick.vertx.elasticsearch.model.GetOptions;
+import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
+import com.hubrick.vertx.elasticsearch.model.SuggestResponse;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
+import com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import rx.Observable;
@@ -43,71 +50,71 @@ public interface RxElasticSearchService {
         return new DefaultRxElasticSearchService(ElasticSearchService.createEventBusProxy(vertx, address));
     }
 
-    default Observable<JsonObject> index(String index, String type, JsonObject source) {
+    default Observable<IndexResponse> index(String index, String type, JsonObject source) {
         return index(index, type, source, new IndexOptions());
     }
 
-    Observable<JsonObject> index(String index, String type, JsonObject source, IndexOptions options);
+    Observable<IndexResponse> index(String index, String type, JsonObject source, IndexOptions options);
 
-    Observable<JsonObject> update(String index, String type, String id, UpdateOptions options);
+    Observable<UpdateResponse> update(String index, String type, String id, UpdateOptions options);
 
-    default Observable<JsonObject> get(String index, String type, String id) {
+    default Observable<GetResponse> get(String index, String type, String id) {
         return get(index, type, id, new GetOptions());
     }
 
-    Observable<JsonObject> get(String index, String type, String id, GetOptions options);
+    Observable<GetResponse> get(String index, String type, String id, GetOptions options);
 
-    default Observable<JsonObject> search(String index) {
+    default Observable<SearchResponse> search(String index) {
         return search(index, new SearchOptions());
     }
 
-    default Observable<JsonObject> search(String index, SearchOptions options) {
+    default Observable<SearchResponse> search(String index, SearchOptions options) {
         return search(Collections.singletonList(index), options);
     }
 
-    default Observable<JsonObject> search(List<String> indices) {
+    default Observable<SearchResponse> search(List<String> indices) {
         return search(indices, new SearchOptions());
     }
 
-    Observable<JsonObject> search(List<String> indices, SearchOptions options);
+    Observable<SearchResponse> search(List<String> indices, SearchOptions options);
 
-    default Observable<JsonObject> searchScroll(String scrollId) {
+    default Observable<SearchResponse> searchScroll(String scrollId) {
         return searchScroll(scrollId, new SearchScrollOptions());
     }
 
-    Observable<JsonObject> searchScroll(String scrollId, SearchScrollOptions options);
+    Observable<SearchResponse> searchScroll(String scrollId, SearchScrollOptions options);
 
-    default Observable<JsonObject> delete(String index, String type, String id) {
+    default Observable<DeleteResponse> delete(String index, String type, String id) {
         return delete(index, type, id, new DeleteOptions());
     }
 
-    Observable<JsonObject> delete(String index, String type, String id, DeleteOptions options);
+    Observable<DeleteResponse> delete(String index, String type, String id, DeleteOptions options);
 
-    default Observable<JsonObject> suggest(String index, SuggestOptions options) {
+    default Observable<SuggestResponse> suggest(String index, SuggestOptions options) {
         return suggest(Collections.singletonList(index), options);
     }
 
-    default Observable<JsonObject> suggest(String index) {
+    default Observable<SuggestResponse> suggest(String index) {
         return suggest(Collections.singletonList(index), new SuggestOptions());
     }
 
-    default Observable<JsonObject> suggest(List<String> indices) {
+    default Observable<SuggestResponse> suggest(List<String> indices) {
         return suggest(indices, new SuggestOptions());
     }
 
-    Observable<JsonObject> suggest(List<String> indices, SuggestOptions options);
+    Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options);
 
-    default Observable<JsonObject> deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options) {
+    default Observable<DeleteByQueryResponse> deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options) {
         return deleteByQuery(Collections.singletonList(index), query, options);
     }
 
-    default Observable<JsonObject> deleteByQuery(String index, JsonObject query) {
+    default Observable<DeleteByQueryResponse> deleteByQuery(String index, JsonObject query) {
         return deleteByQuery(Collections.singletonList(index), query, new DeleteByQueryOptions());
     }
 
-    default Observable<JsonObject> deleteByQuery(List<String> indices, JsonObject query) {
+    default Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query) {
         return deleteByQuery(indices, query, new DeleteByQueryOptions());
     }
 
-    Observable<JsonObject> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options);
+    Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options);
 }

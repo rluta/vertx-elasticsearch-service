@@ -15,16 +15,23 @@
  */
 package com.hubrick.vertx.elasticsearch.impl;
 
-import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
-import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
-import com.hubrick.vertx.elasticsearch.model.GetOptions;
-import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
+import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteResponse;
+import com.hubrick.vertx.elasticsearch.model.GetOptions;
+import com.hubrick.vertx.elasticsearch.model.GetResponse;
+import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
+import com.hubrick.vertx.elasticsearch.model.SuggestResponse;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
+import com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rx.java.ObservableFuture;
 import io.vertx.rx.java.RxHelper;
@@ -49,62 +56,62 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
     }
 
     @Override
-    public Observable<JsonObject> index(String index, String type, JsonObject source, IndexOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<IndexResponse> index(String index, String type, JsonObject source, IndexOptions options) {
+        final ObservableFuture<IndexResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.index(index, type, source, options, observableFuture.toHandler());
         return observableFuture;
     }
 
     @Override
-    public Observable<JsonObject> update(String index, String type, String id, UpdateOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<UpdateResponse> update(String index, String type, String id, UpdateOptions options) {
+        final ObservableFuture<UpdateResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.update(index, type, id, options, observableFuture.toHandler());
         return observableFuture;
     }
 
     @Override
-    public Observable<JsonObject> get(String index, String type, String id, GetOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<GetResponse> get(String index, String type, String id, GetOptions options) {
+        final ObservableFuture<GetResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.get(index, type, id, options, observableFuture.toHandler());
         return observableFuture;
 
     }
 
     @Override
-    public Observable<JsonObject> search(List<String> indices, SearchOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<SearchResponse> search(List<String> indices, SearchOptions options) {
+        final ObservableFuture<SearchResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.search(indices, options, observableFuture.toHandler());
         return observableFuture;
 
     }
 
     @Override
-    public Observable<JsonObject> searchScroll(String scrollId, SearchScrollOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<SearchResponse> searchScroll(String scrollId, SearchScrollOptions options) {
+        final ObservableFuture<SearchResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.searchScroll(scrollId, options, observableFuture.toHandler());
         return observableFuture;
 
     }
 
     @Override
-    public Observable<JsonObject> delete(String index, String type, String id, DeleteOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<DeleteResponse> delete(String index, String type, String id, DeleteOptions options) {
+        final ObservableFuture<DeleteResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.delete(index, type, id, options, observableFuture.toHandler());
         return observableFuture;
 
     }
 
     @Override
-    public Observable<JsonObject> suggest(List<String> indices, SuggestOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options) {
+        final ObservableFuture<SuggestResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.suggest(indices, options, observableFuture.toHandler());
         return observableFuture;
 
     }
 
     @Override
-    public Observable<JsonObject> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options) {
+        final ObservableFuture<DeleteByQueryResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.deleteByQuery(indices, query, options, observableFuture.toHandler());
         return observableFuture;
     }

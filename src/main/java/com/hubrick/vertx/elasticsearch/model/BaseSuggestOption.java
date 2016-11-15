@@ -25,51 +25,47 @@ import io.vertx.core.json.JsonObject;
 @DataObject
 public abstract class BaseSuggestOption {
 
-    private SuggestType suggestType;
+    private SuggestionType suggestionType;
 
-    public static final String JSON_FIELD_SUGGEST_TYPE = "suggestType";
+    public static final String JSON_FIELD_SUGGESTION_TYPE = "type";
 
-    protected BaseSuggestOption(SuggestType suggestType) {
-        this.suggestType = suggestType;
+    protected BaseSuggestOption(SuggestionType suggestionType) {
+        this.suggestionType = suggestionType;
     }
 
     public BaseSuggestOption(BaseSuggestOption other) {
-        suggestType = other.getSuggestType();
+        suggestionType = other.getSuggestionType();
     }
 
     public BaseSuggestOption(JsonObject json) {
         try {
-            suggestType = SuggestType.valueOf(json.getString(JSON_FIELD_SUGGEST_TYPE));
+            suggestionType = SuggestionType.valueOf(json.getString(JSON_FIELD_SUGGESTION_TYPE));
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Type " + json.getString(JSON_FIELD_SUGGEST_TYPE) + " is not supported");
+            throw new IllegalArgumentException("Type " + json.getString(JSON_FIELD_SUGGESTION_TYPE) + " is not supported");
         }
     }
 
-    public SuggestType getSuggestType() {
-        return suggestType;
+    public SuggestionType getSuggestionType() {
+        return suggestionType;
     }
 
     public JsonObject toJson() {
         return new JsonObject()
-                .put(JSON_FIELD_SUGGEST_TYPE, suggestType.name());
+                .put(JSON_FIELD_SUGGESTION_TYPE, suggestionType.name());
     }
 
     public static BaseSuggestOption parseJson(JsonObject jsonObject) {
         try {
-            final SuggestType suggestType = SuggestType.valueOf(jsonObject.getString(JSON_FIELD_SUGGEST_TYPE));
-            switch (suggestType) {
+            final SuggestionType suggestionType = SuggestionType.valueOf(jsonObject.getString(JSON_FIELD_SUGGESTION_TYPE));
+            switch (suggestionType) {
                 case COMPLETION:
                     return new CompletionSuggestOption(jsonObject);
                 default:
-                    throw new IllegalArgumentException("SuggestType " + jsonObject.getString(JSON_FIELD_SUGGEST_TYPE) + " is not supported");
+                    throw new IllegalArgumentException("SuggestType " + jsonObject.getString(JSON_FIELD_SUGGESTION_TYPE) + " is not supported");
             }
 
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("SuggestType " + jsonObject.getString(JSON_FIELD_SUGGEST_TYPE) + " is not supported");
+            throw new IllegalArgumentException("SuggestType " + jsonObject.getString(JSON_FIELD_SUGGESTION_TYPE) + " is not supported");
         }
-    }
-
-    public enum SuggestType {
-        COMPLETION
     }
 }
