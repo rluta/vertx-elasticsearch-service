@@ -10,6 +10,22 @@ Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/ver
 | 3.3.3     | 2.2.2          | 1.0.0                           |
 
 
+## Compatibility
+- Java 8+
+- Vert.x 3.x.x
+
+## Dependencies
+
+### Maven
+```xml
+<dependency>
+    <groupId>com.hubrick.vertx</groupId>
+    <artifactId>vertx-elasticsearch-service</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+
 ## Configuration
 
 The configuration options are as follows:
