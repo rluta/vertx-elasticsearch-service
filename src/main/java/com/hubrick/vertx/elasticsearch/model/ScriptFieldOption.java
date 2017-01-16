@@ -19,8 +19,6 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonObject;
 
-import java.util.Map;
-
 /**
  * Sort option
  */
@@ -29,7 +27,7 @@ public class ScriptFieldOption {
 
     private String script;
     private String lang;
-    private Map<String, Object> params;
+    private JsonObject params;
 
     public static final String JSON_FIELD_SCRIPT = "script";
     public static final String JSON_FIELD_LANG = "lang";
@@ -47,7 +45,7 @@ public class ScriptFieldOption {
     public ScriptFieldOption(JsonObject json) {
         script = json.getString(JSON_FIELD_SCRIPT);
         lang = json.getString(JSON_FIELD_LANG);
-        params = json.getJsonObject(JSON_FIELD_PARAMS).getMap();
+        params = json.getJsonObject(JSON_FIELD_PARAMS);
     }
 
     public String getScript() {
@@ -74,11 +72,11 @@ public class ScriptFieldOption {
         return this;
     }
 
-    public Map<String, Object> getParams() {
+    public JsonObject getParams() {
         return params;
     }
 
-    public ScriptFieldOption setParams(Map<String, Object> params) {
+    public ScriptFieldOption setParams(JsonObject params) {
         this.params = params;
         return this;
     }

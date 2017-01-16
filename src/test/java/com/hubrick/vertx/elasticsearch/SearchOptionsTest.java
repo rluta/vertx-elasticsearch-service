@@ -15,6 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
+import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import io.vertx.core.json.JsonObject;
@@ -22,8 +23,6 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Test;
-
-import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -65,8 +64,8 @@ public class SearchOptionsTest {
                 .setAggregations(new JsonObject().put("name", "name"))
                 .addFieldSort("status", SortOrder.ASC)
                 .addFieldSort("insert_date", SortOrder.ASC)
-                .addScripSort("doc['score']", ScriptSortOption.Type.NUMBER, Collections.emptyMap(), SortOrder.ASC)
-                .addScriptField("script_field", "doc['score']", Collections.emptyMap())
+                .addScripSort("doc['score']", ScriptSortOption.Type.NUMBER, new JsonObject(), SortOrder.ASC)
+                .addScriptField("script_field", "doc['score']", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
                 .setExtraSource(new JsonObject().put("extra", "1"))
                 .setTemplateName("templateName")
                 .setTemplateType(ScriptService.ScriptType.INDEXED)

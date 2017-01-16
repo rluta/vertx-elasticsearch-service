@@ -330,6 +330,7 @@
 |===
 ^|Name | Type ^| Description
 |[[lang]]`lang`|`String`|-
+|[[params]]`params`|`Json object`|-
 |[[script]]`script`|`String`|-
 |===
 
@@ -347,6 +348,7 @@
 ^|Name | Type ^| Description
 |[[lang]]`lang`|`String`|-
 |[[order]]`order`|`link:enums.html#SortOrder[SortOrder]`|-
+|[[params]]`params`|`Json object`|-
 |[[script]]`script`|`String`|-
 |[[sortType]]`sortType`|`link:enums.html#SortType[SortType]`|-
 |[[type]]`type`|`link:enums.html#Type[Type]`|-

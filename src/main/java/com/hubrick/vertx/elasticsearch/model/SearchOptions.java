@@ -265,13 +265,13 @@ public class SearchOptions {
     }
 
     @GenIgnore
-    public SearchOptions addScripSort(String script, ScriptSortOption.Type type, Map<String, Object> params, SortOrder order) {
+    public SearchOptions addScripSort(String script, ScriptSortOption.Type type, JsonObject params, SortOrder order) {
         sorts.add(new ScriptSortOption().setScript(script).setType(type).setParams(params).setOrder(order));
         return this;
     }
 
     @GenIgnore
-    public SearchOptions addScripSort(String script, String lang, ScriptSortOption.Type type, Map<String, Object> params, SortOrder order) {
+    public SearchOptions addScripSort(String script, String lang, ScriptSortOption.Type type, JsonObject params, SortOrder order) {
         sorts.add(new ScriptSortOption().setScript(script).setLang(lang).setType(type).setParams(params).setOrder(order));
         return this;
     }
@@ -389,13 +389,13 @@ public class SearchOptions {
     }
 
     @GenIgnore
-    public SearchOptions addScriptField(String name, String script, Map<String, Object> params) {
+    public SearchOptions addScriptField(String name, String script, JsonObject params) {
         scriptFields.put(name, new ScriptFieldOption().setScript(script).setParams(params));
         return this;
     }
 
     @GenIgnore
-    public SearchOptions addScriptField(String name, String script, String lang, Map<String, Object> params) {
+    public SearchOptions addScriptField(String name, String script, String lang, JsonObject params) {
         scriptFields.put(name, new ScriptFieldOption().setScript(script).setLang(lang).setParams(params));
         return this;
     }
@@ -436,7 +436,7 @@ public class SearchOptions {
 
         if (!scriptFields.isEmpty()) {
             JsonObject scriptFieldsJson = new JsonObject();
-            for(Map.Entry<String, ScriptFieldOption> scriptFieldOptionEntry : scriptFields.entrySet()) {
+            for (Map.Entry<String, ScriptFieldOption> scriptFieldOptionEntry : scriptFields.entrySet()) {
                 scriptFieldsJson.put(scriptFieldOptionEntry.getKey(), scriptFieldOptionEntry.getValue().toJson());
             }
             json.put(JSON_FIELD_SCRIPT_FIELDS, scriptFieldsJson);

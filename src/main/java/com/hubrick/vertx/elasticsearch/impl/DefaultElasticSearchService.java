@@ -35,6 +35,7 @@ import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -66,6 +67,8 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 
 import javax.inject.Inject;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -172,7 +175,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
 
             if (options.getScript() != null) {
                 if (options.getScriptType() != null) {
-                    Map<String, ? extends Object> params = (options.getScriptParams() == null ? null : options.getScriptParams().getMap());
+                    Map<String, ? extends Object> params = (options.getScriptParams() == null ? null : convertJsonObjectToMap(options.getScriptParams()));
                     builder.setScript(new Script(options.getScript(), options.getScriptType(), options.getScriptLang(), params));
                 } else {
                     builder.setScript(new Script(options.getScript()));
@@ -277,7 +280,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                             break;
                         case SCRIPT:
                             final ScriptSortOption scriptSortOption = (ScriptSortOption) baseSortOption;
-                            final Script script = new Script(scriptSortOption.getScript(), ScriptService.ScriptType.INLINE, scriptSortOption.getLang(), scriptSortOption.getParams());
+                            final Script script = new Script(scriptSortOption.getScript(), ScriptService.ScriptType.INLINE, scriptSortOption.getLang(), convertJsonObjectToMap(scriptSortOption.getParams()));
                             final ScriptSortBuilder scriptSortBuilder = new ScriptSortBuilder(script, scriptSortOption.getType().getValue()).order(scriptSortOption.getOrder());
                             builder.addSort(scriptSortBuilder);
                             break;
@@ -295,7 +298,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             }
             if (!options.getScriptFields().isEmpty()) {
                 options.getScriptFields().entrySet().forEach(scriptFieldEntry -> {
-                    final Script script = new Script(scriptFieldEntry.getValue().getScript(), ScriptService.ScriptType.INLINE, scriptFieldEntry.getValue().getLang(), scriptFieldEntry.getValue().getParams());
+                    final Script script = new Script(scriptFieldEntry.getValue().getScript(), ScriptService.ScriptType.INLINE, scriptFieldEntry.getValue().getLang(), convertJsonObjectToMap(scriptFieldEntry.getValue().getParams()));
                     builder.addScriptField(scriptFieldEntry.getKey(), script);
                 });
             }
@@ -452,6 +455,38 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         } else {
             resultHandler.handle(Future.failedFuture(t));
         }
+    }
+
+    private Map<String, Object> convertJsonObjectToMap(JsonObject jsonObject) {
+
+        final Map<String, Object> map = new HashMap<>();
+        for (Map.Entry<String, Object> jsonObjectEntry : jsonObject) {
+            if (jsonObjectEntry.getValue() instanceof JsonArray) {
+                map.put(jsonObjectEntry.getKey(), convertJsonArrayToList((JsonArray) jsonObjectEntry.getValue()));
+            } else if (jsonObjectEntry.getValue() instanceof JsonObject) {
+                map.put(jsonObjectEntry.getKey(), convertJsonObjectToMap((JsonObject) jsonObjectEntry.getValue()));
+            } else {
+                map.put(jsonObjectEntry.getKey(), jsonObjectEntry.getValue());
+            }
+        }
+
+        return map;
+    }
+
+    private List<Object> convertJsonArrayToList(JsonArray jsonArray) {
+
+        final List<Object> list = new LinkedList<>();
+        for (Object jsonArrayEntry : jsonArray) {
+            if(jsonArrayEntry instanceof JsonObject) {
+                list.add(convertJsonObjectToMap((JsonObject) jsonArrayEntry));
+            } else if(jsonArrayEntry instanceof JsonArray) {
+                list.add(convertJsonArrayToList((JsonArray) jsonArrayEntry));
+            } else {
+                list.add(jsonArrayEntry);
+            }
+        }
+
+        return list;
     }
 
 }
