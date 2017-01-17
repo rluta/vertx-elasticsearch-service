@@ -8,6 +8,7 @@ Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/ver
 | vert.x    | elasticsearch  | vertx-elasticsearch-service     |
 | --------- | -------------- | ---------------------------     |
 | 3.3.3     | 2.2.2          | 1.0.0                           |
+| 3.3.3     | 2.2.2          | 1.1.0                           |
 
 
 ## Compatibility
@@ -21,7 +22,7 @@ Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/ver
 <dependency>
     <groupId>com.hubrick.vertx</groupId>
     <artifactId>vertx-elasticsearch-service</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -184,7 +185,7 @@ An example message would be:
         .setSearchType(SearchType.SCAN)
         .setFetchSource(true)
         .addFieldSort("id", SortOrder.DESC)
-        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, Collections.emptyMap(), SortOrder.DESC);
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
         // etc.
         
     elasticSearchService.search("twitter", searchOptions, searchResponse -> {
@@ -205,7 +206,7 @@ An example message would be:
         .setSearchType(SearchType.SCAN)
         .setFetchSource(true)
         .addFieldSort("id", SortOrder.DESC)
-        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, Collections.emptyMap(), SortOrder.DESC);
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
         // etc.
             
     rxElasticSearchService.search("twitter", searchOptions)
