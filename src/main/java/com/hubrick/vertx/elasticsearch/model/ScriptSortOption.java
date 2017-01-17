@@ -32,7 +32,7 @@ public class ScriptSortOption extends BaseSortOption {
     private String script;
     private Type type;
     private String lang;
-    private Map<String, Object> params;
+    private JsonObject params;
 
     public static final String JSON_FIELD_SCRIPT = "script";
     public static final String JSON_FIELD_LANG = "lang";
@@ -57,7 +57,7 @@ public class ScriptSortOption extends BaseSortOption {
         script = json.getString(JSON_FIELD_SCRIPT);
         lang = json.getString(JSON_FIELD_LANG);
         type = Type.fromString(json.getString(JSON_FIELD_TYPE));
-        params = json.getJsonObject(JSON_FIELD_PARAMS).getMap();
+        params = json.getJsonObject(JSON_FIELD_PARAMS);
     }
 
     public String getScript() {
@@ -93,11 +93,11 @@ public class ScriptSortOption extends BaseSortOption {
         return this;
     }
 
-    public Map<String, Object> getParams() {
+    public JsonObject getParams() {
         return params;
     }
 
-    public ScriptSortOption setParams(Map<String, Object> params) {
+    public ScriptSortOption setParams(JsonObject params) {
         this.params = params;
         return this;
     }

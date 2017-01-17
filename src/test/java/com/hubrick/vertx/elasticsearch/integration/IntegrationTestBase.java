@@ -15,6 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch.integration;
 
+import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.AbstractVertxIntegrationTest;
 import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
@@ -48,7 +49,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.Collections;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -163,8 +163,8 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 .addField("user")
                 .addField("message")
                 .addFieldSort("user", SortOrder.DESC)
-                .addScripSort("doc['message']", ScriptSortOption.Type.STRING, Collections.emptyMap(), SortOrder.ASC)
-                .addScriptField("script_field", "doc['message']", Collections.emptyMap())
+                .addScripSort("doc['message']", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
+                .addScriptField("script_field", "doc['message']", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
         rxService.search(index, options)
