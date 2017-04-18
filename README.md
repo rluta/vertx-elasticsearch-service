@@ -3,6 +3,8 @@
 Vert.x 3 elasticsearch service with event bus proxying and RxJava support. 
 Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/vertx-elasticsearch-service). 
 
+The difference to [ef-labs/vertx-elasticsearch-service](https://github.com/ef-labs/vertx-elasticsearch-service) are some additional features and the request and reponse objects are concrete java classes instead of the generic JsonObject.
+
 ### Version Matrix
 
 | vert.x    | elasticsearch  | vertx-elasticsearch-service     |
