@@ -1,4 +1,4 @@
-FROM elasticsearch:2.2.0
+FROM elasticsearch:2.4.4
 
 RUN /usr/share/elasticsearch/bin/plugin install delete-by-query
 RUN echo "script.inline: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
