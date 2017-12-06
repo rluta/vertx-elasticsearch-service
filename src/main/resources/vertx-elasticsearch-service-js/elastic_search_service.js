@@ -31,6 +31,7 @@ var UpdateOptions = com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 var GetResponse = com.hubrick.vertx.elasticsearch.model.GetResponse;
 var UpdateResponse = com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 var SearchOptions = com.hubrick.vertx.elasticsearch.model.SearchOptions;
+var BulkIndexResponse = com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
 var DeleteOptions = com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 var SuggestOptions = com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 var SuggestResponse = com.hubrick.vertx.elasticsearch.model.SuggestResponse;
@@ -85,6 +86,28 @@ var ElasticSearchService = function(j_val) {
     var __args = arguments;
     if (__args.length === 5 && typeof __args[0] === 'string' && typeof __args[1] === 'string' && (typeof __args[2] === 'object' && __args[2] != null) && (typeof __args[3] === 'object' && __args[3] != null) && typeof __args[4] === 'function') {
       j_elasticSearchService["index(java.lang.String,java.lang.String,io.vertx.core.json.JsonObject,com.hubrick.vertx.elasticsearch.model.IndexOptions,io.vertx.core.Handler)"](index, type, utils.convParamJsonObject(source), options != null ? new IndexOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
+      if (ar.succeeded()) {
+        resultHandler(utils.convReturnDataObject(ar.result()), null);
+      } else {
+        resultHandler(null, ar.cause());
+      }
+    });
+    } else throw new TypeError('function invoked with invalid arguments');
+  };
+
+  /**
+
+   @public
+   @param index {string} 
+   @param type {string} 
+   @param sources {Array.<Object>} 
+   @param options {Object} 
+   @param resultHandler {function} 
+   */
+  this.bulkIndex = function(index, type, sources, options, resultHandler) {
+    var __args = arguments;
+    if (__args.length === 5 && typeof __args[0] === 'string' && typeof __args[1] === 'string' && typeof __args[2] === 'object' && __args[2] instanceof Array && (typeof __args[3] === 'object' && __args[3] != null) && typeof __args[4] === 'function') {
+      j_elasticSearchService["bulkIndex(java.lang.String,java.lang.String,java.util.List,com.hubrick.vertx.elasticsearch.model.IndexOptions,io.vertx.core.Handler)"](index, type, utils.convParamListJsonObject(sources), options != null ? new IndexOptions(new JsonObject(JSON.stringify(options))) : null, function(ar) {
       if (ar.succeeded()) {
         resultHandler(utils.convReturnDataObject(ar.result()), null);
       } else {

@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.hubrick.vertx</groupId>
     <artifactId>vertx-elasticsearch-service</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <inceptionYear>2016</inceptionYear>
     <licenses>
         <license>
@@ -29,6 +29,11 @@
             <name>Marcus Thiesen</name>
             <email>oss@hubrick.com</email>
         </developer>
+        <developer>
+            <id>3</id>
+            <name>Sebastian Piedoux</name>
+            <email>oss@hubrick.com</email>
+        </developer>
     </developers>
 
     <properties>
@@ -47,7 +52,7 @@
 
         <!--Vert.x codegen does not play nice with maven-compiler-plugin 3.2-->
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
-        <maven-docker-plugin.version>2.11.19</maven-docker-plugin.version>
+        <maven-docker-plugin.version>2.11.24</maven-docker-plugin.version>
         <maven-surefire-plugin.version>2.14</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.14</maven-failsafe-plugin.version>
         <maven-source-plugin.version>2.1.2</maven-source-plugin.version>

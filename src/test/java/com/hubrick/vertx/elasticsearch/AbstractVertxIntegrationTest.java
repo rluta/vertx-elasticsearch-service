@@ -48,7 +48,10 @@ public abstract class AbstractVertxIntegrationTest {
     }
 
     protected final void destroyVerticle() throws Exception {
-        vertx.close();
+        final CountDownLatch latch = new CountDownLatch(1);
+        vertx.close(event ->  latch.countDown());
+
+        latch.await(30, TimeUnit.SECONDS);
     }
 
 }

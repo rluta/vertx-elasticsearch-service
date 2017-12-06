@@ -49,6 +49,21 @@
 |[[suggestionType]]`suggestionType`|`link:enums.html#SuggestionType[SuggestionType]`|-
 |===
 
+[[BulkIndexResponse]]
+== BulkIndexResponse
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[tookInMillis]]`tookInMillis`|`Number (Long)`|-
+|===
+
 [[CompletionSuggestOption]]
 == CompletionSuggestOption
 
