@@ -41,6 +41,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryAction;
@@ -72,6 +74,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToBulkIndexResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteByQueryResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToIndexResponse;
@@ -150,6 +153,33 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             }
         });
 
+    }
+
+    @Override
+    public void bulkIndex(final String index, final String type, final List<JsonObject> sources, final IndexOptions options, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkIndexResponse>> resultHandler) {
+        final BulkRequestBuilder builder = client.prepareBulk();
+
+        if (options != null) {
+            if (options.isRefresh() != null) builder.setRefresh(options.isRefresh());
+            if (options.getConsistencyLevel() != null) builder.setConsistencyLevel(options.getConsistencyLevel());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+        }
+
+        for (final JsonObject source : sources) {
+            builder.add(client.prepareIndex(index,type).setSource(convertJsonObjectToMap(source)));
+        }
+
+        builder.execute(new ActionListener<BulkResponse>() {
+            @Override
+            public void onResponse(final BulkResponse bulkItemResponses) {
+                resultHandler.handle(Future.succeededFuture(mapToBulkIndexResponse(bulkItemResponses)));
+            }
+
+            @Override
+            public void onFailure(final Throwable throwable) {
+                handleFailure(resultHandler, throwable);
+            }
+        });
     }
 
     @Override

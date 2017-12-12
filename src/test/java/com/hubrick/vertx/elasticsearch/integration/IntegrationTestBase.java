@@ -51,11 +51,14 @@ import org.junit.runners.MethodSorters;
 
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.hubrick.vertx.elasticsearch.VertxMatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
@@ -301,6 +304,43 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                         },
                         error -> testContext.fail(error)
                 );
+    }
+
+    @Test
+    public void test8BulkIndex(TestContext testContext) throws Exception {
+
+        final Async async = testContext.async();
+        final JsonObject source1 = new JsonObject()
+            .put("user", source_user)
+            .put("message", source_message)
+            .put("obj", new JsonObject()
+                .put("array", new JsonArray()
+                    .add("1")
+                    .add("2")));
+
+        final JsonObject source2 = new JsonObject()
+            .put("user", source_user)
+            .put("message", source_message)
+            .put("obj", new JsonObject()
+                .put("array", new JsonArray()
+                    .add("1")
+                    .add("2")));
+
+        final IndexOptions options = new IndexOptions().setId(id);
+        rxService.bulkIndex(index, type, ImmutableList.of(source1, source2), options)
+            .subscribe(
+                bulkIndexResponse -> {
+                    assertThat(testContext, bulkIndexResponse.getResponses().size(), is(2));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getId()).filter(e -> e != null).collect(Collectors.toList()), hasSize(2));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getShards()).filter(e -> e != null).collect(Collectors.toList()), hasSize(2));
+
+                    assertThat(testContext, bulkIndexResponse.getTookInMillis(), greaterThanOrEqualTo(0l));
+
+                    // Give elasticsearch time to index the document
+                    vertx.setTimer(1000, id -> async.complete());
+                },
+                error -> testContext.fail(error)
+            );
     }
 
     @Test
