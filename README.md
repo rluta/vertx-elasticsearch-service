@@ -25,7 +25,7 @@ The difference to [ef-labs/vertx-elasticsearch-service](https://github.com/ef-la
 <dependency>
     <groupId>com.hubrick.vertx</groupId>
     <artifactId>vertx-elasticsearch-service</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
