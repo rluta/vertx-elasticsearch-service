@@ -11,6 +11,7 @@ The difference to [ef-labs/vertx-elasticsearch-service](https://github.com/ef-la
 | --------- | -------------- | ---------------------------     |
 | 3.3.3     | 2.2.2          | 1.0.0                           |
 | 3.3.3     | 2.2.2          | 1.1.0                           |
+| 3.3.3     | 2.2.2          | 1.2.0                           |
 
 
 ## Compatibility
