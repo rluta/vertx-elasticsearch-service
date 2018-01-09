@@ -55,7 +55,6 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
 
     private static final String SCRIPT_TYPE_INLINE = "inline";
     private static final String SCRIPT_TYPE_STORED = "stored";
-    private static final String SCRIPT_TYPE_FILE = "file";
 
     public UpdateOptions() {
     }
@@ -100,9 +99,6 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
                     break;
                 case SCRIPT_TYPE_STORED:
                     scriptType = ScriptType.STORED;
-                    break;
-                case SCRIPT_TYPE_FILE:
-                    scriptType = ScriptType.FILE;
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported script type: " + s);

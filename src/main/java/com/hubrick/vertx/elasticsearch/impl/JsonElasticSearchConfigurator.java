@@ -19,7 +19,6 @@ import com.hubrick.vertx.elasticsearch.ElasticSearchConfigurator;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 
 import javax.inject.Inject;
@@ -83,14 +82,14 @@ public class JsonElasticSearchConfigurator implements ElasticSearchConfigurator 
 
                     if (hostname != null && !hostname.isEmpty()) {
                         int port = transportAddress.getInteger(CONFIG_PORT, 9300);
-                        transportAddresses.add(new InetSocketTransportAddress(InetAddress.getByName(hostname), port));
+                        transportAddresses.add(new TransportAddress(InetAddress.getByName(hostname), port));
                     }
                 }
             }
 
             // If no addresses are configured, add local host on the default port
             if (transportAddresses.size() == 0) {
-                transportAddresses.add(new InetSocketTransportAddress(new InetSocketAddress("localhost", 9300)));
+                transportAddresses.add(new TransportAddress(new InetSocketAddress("localhost", 9300)));
             }
         } catch (Exception e) {
             throw new IllegalStateException("Can't create transport client", e);

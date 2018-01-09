@@ -16,7 +16,6 @@
 package com.hubrick.vertx.elasticsearch.impl;
 
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.junit.Test;
 
@@ -40,7 +39,7 @@ public class EnvElasticSearchConfiguratorTest {
         final EnvElasticSearchConfigurator envConfigurator = new EnvElasticSearchConfigurator(new JsonObject());
 
         final List<TransportAddress> expected =
-                Collections.singletonList(new InetSocketTransportAddress(new InetSocketAddress("172.45.0.1", 9300)));
+                Collections.singletonList(new TransportAddress(new InetSocketAddress("172.45.0.1", 9300)));
 
         final List<TransportAddress> actual = envConfigurator.transportAddresses;
 
@@ -54,7 +53,7 @@ public class EnvElasticSearchConfiguratorTest {
         final EnvElasticSearchConfigurator envConfigurator = new EnvElasticSearchConfigurator(new JsonObject());
 
         final List<TransportAddress> expected =
-                Collections.singletonList(new InetSocketTransportAddress(new InetSocketAddress("172.45.0.1", 9305)));
+                Collections.singletonList(new TransportAddress(new InetSocketAddress("172.45.0.1", 9305)));
 
         final List<TransportAddress> actual = envConfigurator.transportAddresses;
 
@@ -68,8 +67,8 @@ public class EnvElasticSearchConfiguratorTest {
         final EnvElasticSearchConfigurator envConfigurator = new EnvElasticSearchConfigurator(new JsonObject());
 
         final List<TransportAddress> expected = new LinkedList<>();
-        expected.add(new InetSocketTransportAddress(new InetSocketAddress("172.45.0.1", 9300)));
-        expected.add(new InetSocketTransportAddress(new InetSocketAddress("172.45.0.2", 9300)));
+        expected.add(new TransportAddress(new InetSocketAddress("172.45.0.1", 9300)));
+        expected.add(new TransportAddress(new InetSocketAddress("172.45.0.2", 9300)));
 
         final List<TransportAddress> actual = envConfigurator.transportAddresses;
 
@@ -83,8 +82,8 @@ public class EnvElasticSearchConfiguratorTest {
         final EnvElasticSearchConfigurator envConfigurator = new EnvElasticSearchConfigurator(new JsonObject());
 
         final List<TransportAddress> expected = new LinkedList<>();
-        expected.add(new InetSocketTransportAddress(new InetSocketAddress("172.45.0.1", 9305)));
-        expected.add(new InetSocketTransportAddress(new InetSocketAddress("172.45.0.2", 9306)));
+        expected.add(new TransportAddress(new InetSocketAddress("172.45.0.1", 9305)));
+        expected.add(new TransportAddress(new InetSocketAddress("172.45.0.2", 9306)));
 
         final List<TransportAddress> actual = envConfigurator.transportAddresses;
 

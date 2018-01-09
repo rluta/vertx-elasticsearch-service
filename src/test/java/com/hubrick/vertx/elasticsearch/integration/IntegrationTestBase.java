@@ -194,8 +194,8 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 .setFrom(10)
                 .setSourceIncludes(Arrays.asList("user", "message"))
                 .addFieldSort("user", SortOrder.DESC)
-                .addScripSort("doc['message']", "groovy", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
-                .addScriptField("script_field", "doc['message']", "groovy", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
+                .addScripSort("doc['message']", "painless", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
+                .addScriptField("script_field", "doc['message']", "painless", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
         rxService.search(index, options)

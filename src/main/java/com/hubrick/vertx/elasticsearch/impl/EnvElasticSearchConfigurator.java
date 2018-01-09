@@ -16,8 +16,8 @@
 package com.hubrick.vertx.elasticsearch.impl;
 
 import io.vertx.core.Vertx;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import io.vertx.core.json.JsonObject;
+import org.elasticsearch.common.transport.TransportAddress;
 
 import javax.inject.Inject;
 import java.net.InetSocketAddress;
@@ -66,7 +66,7 @@ public class EnvElasticSearchConfigurator extends JsonElasticSearchConfigurator 
                 String hostname = split[0];
                 int port = (split.length == 1 ? 9300 : Integer.parseInt(split[1]));
 
-                transportAddresses.add(new InetSocketTransportAddress(new InetSocketAddress(hostname, port)));
+                transportAddresses.add(new TransportAddress(new InetSocketAddress(hostname, port)));
             }
         }
 

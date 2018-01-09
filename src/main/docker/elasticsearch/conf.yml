@@ -2,6 +2,12 @@ ports:
   - 9200
   - 9300
 
+env:
+  transport.host: 0.0.0.0
+  discovery.type: single-node
+  bootstrap.memory_lock: true
+  cluster.name: elasticsearch
+
 healthChecks:
   logPatterns:
     - pattern: started

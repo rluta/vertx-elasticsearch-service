@@ -150,7 +150,7 @@ public class ElasticSearchServiceMapper {
         }
 
         bulkIndexResponse.setResponses(bulkResponseItemsBuilder.build());
-        bulkIndexResponse.setTookInMillis(bulkResponse.getTookInMillis());
+        bulkIndexResponse.setTookInMillis(bulkResponse.getTook().getMillis());
 
         return bulkIndexResponse;
     }
@@ -182,9 +182,9 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.SearchResponse mapToSearchResponse(SearchResponse esSearchResponse) {
         final com.hubrick.vertx.elasticsearch.model.SearchResponse searchResponse = new com.hubrick.vertx.elasticsearch.model.SearchResponse();
 
-        //searchResponse.setRawResponse(readResponse(esSearchResponse)); // crashes...
+        // searchResponse.setRawResponse(readResponse(esSearchResponse)); // crashes...
         searchResponse.setRawResponse(new JsonObject(esSearchResponse.toString()));
-        searchResponse.setTook(esSearchResponse.getTookInMillis());
+        searchResponse.setTook(esSearchResponse.getTook().getMillis());
         searchResponse.setTimedOut(esSearchResponse.isTimedOut());
         searchResponse.setShards(mapToShards(esSearchResponse));
         searchResponse.setHits(mapToHits(esSearchResponse.getHits()));
@@ -255,8 +255,8 @@ public class ElasticSearchServiceMapper {
                                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getValues()))
                 );
 
-        if (searchHit.getSource() != null) {
-            hit.setSource(new JsonObject(searchHit.getSource()));
+        if (searchHit.getSourceAsString() != null) {
+            hit.setSource(new JsonObject(searchHit.getSourceAsString()));
         }
 
         return hit;

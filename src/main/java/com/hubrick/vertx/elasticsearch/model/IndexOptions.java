@@ -27,13 +27,9 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
 
     private String id;
     private IndexRequest.OpType opType;
-    private String timestamp;
-    private Long ttl;
 
     public static final String FIELD_ID = "id";
     public static final String FIELD_OP_TYPE = "opType";
-    public static final String FIELD_TIMESTAMP = "timestamp";
-    public static final String FIELD_TTL = "ttl";
 
     public IndexOptions() {
     }
@@ -43,8 +39,6 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
 
         id = other.getId();
         opType = other.getOpType();
-        timestamp = other.getTimestamp();
-        ttl = other.getTtl();
 
     }
 
@@ -52,8 +46,6 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
         super(json);
 
         id = json.getString(FIELD_ID);
-        timestamp = json.getString(FIELD_TIMESTAMP);
-        ttl = json.getLong(FIELD_TTL);
 
         String s = json.getString(FIELD_OP_TYPE);
         if (s != null) opType = IndexRequest.OpType.fromString(s);
@@ -77,32 +69,12 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
         return this;
     }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public IndexOptions setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-        return this;
-    }
-
-    public Long getTtl() {
-        return ttl;
-    }
-
-    public IndexOptions setTtl(Long ttl) {
-        this.ttl = ttl;
-        return this;
-    }
-
     @Override
     public JsonObject toJson() {
         JsonObject json = super.toJson();
 
         if (getId() != null) json.put(FIELD_ID, getId());
         if (getOpType() != null) json.put(FIELD_OP_TYPE, getOpType().toString().toLowerCase());
-        if (getTimestamp() != null) json.put(FIELD_TIMESTAMP, getTimestamp());
-        if (getTtl() != null) json.put(FIELD_TTL, getTtl());
 
         return json;
     }

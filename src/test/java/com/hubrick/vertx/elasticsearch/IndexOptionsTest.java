@@ -50,12 +50,10 @@ public class IndexOptionsTest {
                 .setRefresh(RefreshPolicy.IMMEDIATE)
                 .setVersion(2L)
                 .setVersionType(VersionType.EXTERNAL)
-                .setTimestamp("timestamp")
-                .setTtl(1000L)
                 .setTimeout("timeout");
 
         json1 = options1.toJson();
-        assertEquals(10, json1.fieldNames().size());
+        assertEquals(8, json1.fieldNames().size());
 
         options2 = new IndexOptions(json1);
         json2 = options2.toJson();

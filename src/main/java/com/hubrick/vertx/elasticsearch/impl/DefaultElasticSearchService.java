@@ -65,9 +65,9 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
+import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
@@ -76,7 +76,7 @@ import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.filters.FiltersAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoGridAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
@@ -84,10 +84,10 @@ import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregati
 import org.elasticsearch.search.aggregations.bucket.missing.MissingAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.GeoDistanceAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.IpRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.range.date.DateRangeAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistanceAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.range.ip.IpRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.sampler.DiversifiedAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.sampler.SamplerAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
@@ -165,7 +165,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     @Override
     public void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.IndexResponse>> resultHandler) {
 
-        final IndexRequestBuilder builder = client.prepareIndex(index, type).setSource(source.encode());
+        final IndexRequestBuilder builder = client.prepareIndex(index, type).setSource(source.encode(), XContentType.JSON);
 
         if (options != null) {
             if (options.getId() != null) builder.setId(options.getId());
@@ -178,8 +178,6 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                 builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
             if (options.getVersion() != null) builder.setVersion(options.getVersion());
             if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimestamp() != null) builder.setTimestamp(options.getTimestamp());
-            if (options.getTtl() != null) builder.setTTL(options.getTtl());
             if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
         }
 
@@ -572,7 +570,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     private AggregationBuilder parseAggregation(AggregationOption aggregationOption) {
         try {
             AggregationBuilder result = null;
-            QueryParseContext context = new QueryParseContext(XContentType.JSON.xContent().createParser(NamedXContentRegistry.EMPTY, aggregationOption.getDefinition().encode()));
+            XContentParser context = XContentType.JSON.xContent().createParser(NamedXContentRegistry.EMPTY, aggregationOption.getDefinition().encode());
             switch (aggregationOption.getType()) {
                 case TERMS:
                     result = TermsAggregationBuilder.parse(aggregationOption.getName(), context);
@@ -584,7 +582,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                     result = MinAggregationBuilder.parse(aggregationOption.getName(), context);
                     break;
                 case ADJACENCY_MATRIX:
-                    result = AdjacencyMatrixAggregationBuilder.getParser().parse(aggregationOption.getName(), context);
+                    result = AdjacencyMatrixAggregationBuilder.parse(aggregationOption.getName(), context);
                     break;
                 case SUM:
                     result = SumAggregationBuilder.parse(aggregationOption.getName(), context);

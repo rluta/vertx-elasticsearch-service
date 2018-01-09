@@ -12,6 +12,7 @@ The difference to [ef-labs/vertx-elasticsearch-service](https://github.com/ef-la
 | 3.3.3     | 2.2.2          | 1.0.0                           |
 | 3.3.3     | 2.2.2          | 1.1.0                           |
 | 3.5.0     | 5.6.1          | 2.0.0                           |
+| 3.5.0     | 6.1.1          | 2.1.0                           |
 
 ## Compatibility
 - Java 8+
