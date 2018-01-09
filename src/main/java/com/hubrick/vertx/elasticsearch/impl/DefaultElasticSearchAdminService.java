@@ -36,6 +36,7 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingAction;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.common.xcontent.XContentType;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -58,7 +59,7 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
         final PutMappingRequestBuilder builder = PutMappingAction.INSTANCE.newRequestBuilder(service.getClient())
                 .setIndices(indices.toArray(new String[indices.size()]))
                 .setType(type)
-                .setSource(source.encode());
+                .setSource(source.encode(), XContentType.JSON);
 
         builder.execute(new ActionListener<PutMappingResponse>() {
             @Override
@@ -80,7 +81,7 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
 
         final CreateIndexRequestBuilder builder = CreateIndexAction.INSTANCE.newRequestBuilder(service.getClient())
                 .setIndex(index)
-                .setSource(source.encode());
+                .setSource(source.encode(), XContentType.JSON);
 
         builder.execute(new ActionListener<CreateIndexResponse>() {
             @Override

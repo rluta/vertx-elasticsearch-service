@@ -390,8 +390,6 @@
 |[[refreshPolicy]]`refreshPolicy`|`link:enums.html#RefreshPolicy[RefreshPolicy]`|-
 |[[routing]]`routing`|`String`|-
 |[[timeout]]`timeout`|`String`|-
-|[[timestamp]]`timestamp`|`String`|-
-|[[ttl]]`ttl`|`Number (Long)`|-
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
 |[[waitForActiveShard]]`waitForActiveShard`|`Number (Integer)`|-
