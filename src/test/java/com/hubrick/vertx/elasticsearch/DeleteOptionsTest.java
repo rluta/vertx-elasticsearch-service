@@ -16,8 +16,8 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.index.VersionType;
 import org.junit.Test;
 
@@ -38,9 +38,8 @@ public class DeleteOptionsTest {
         assertEquals("{\"parent\":\"parent\"}", json1.encode());
 
         options1 = new DeleteOptions()
-                .setConsistencyLevel(WriteConsistencyLevel.ALL)
                 .setParent("parent")
-                .setRefresh(true)
+                .setRefresh(RefreshPolicy.IMMEDIATE)
                 .setRouting("routing")
                 .setTimeout("timeout")
                 .setVersion(10000L)
@@ -48,7 +47,7 @@ public class DeleteOptionsTest {
 
         json1 = options1.toJson();
 
-        assertEquals(7, json1.fieldNames().size());
+        assertEquals(6, json1.fieldNames().size());
 
         DeleteOptions options2 = new DeleteOptions(json1);
         JsonObject json2 = options2.toJson();

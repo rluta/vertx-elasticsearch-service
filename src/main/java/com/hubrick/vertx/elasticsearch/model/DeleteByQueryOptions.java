@@ -16,75 +16,104 @@
 package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 /**
  * Delete by query operation options
  */
 @DataObject
-public class DeleteByQueryOptions {
+public class DeleteByQueryOptions extends AbstractSearchOptions<DeleteByQueryOptions> {
 
-    private List<String> types = new ArrayList<>();
-    private String timeout;
-    private String routing;
+    private Integer maxRetries;
+    private Integer slices;
+    private Conflicts conflicts;
+    private Integer waitForActiveShards;
+    private Float requestsPerSecond;
 
-    public static final String JSON_FIELD_TYPES = "types";
-    public static final String JSON_FIELD_TIMEOUT = "timeout";
-    public static final String JSON_FIELD_ROUTING = "routing";
+    public static final String JSON_FIELD_MAX_RETRIES = "maxRetries";
+    public static final String JSON_FIELD_SLICES = "slices";
+    public static final String JSON_FIELD_CONFLICTS = "conflicts";
+    public static final String JSON_FIELD_WAIT_FOR_ACTIVE_SHARDS = "waitForActiveShards";
+    public static final String JSON_FIELD_REQUESTS_PER_SECOND = "requestsPerSecond";
 
     public DeleteByQueryOptions() {
     }
 
     public DeleteByQueryOptions(DeleteByQueryOptions other) {
-        types = other.getTypes();
-        timeout = other.getTimeout();
-        routing = other.getRouting();
+        super(other);
+
+        maxRetries = other.getMaxRetries();
+        slices = getSlices();
+        conflicts = other.getConflicts();
+        waitForActiveShards = other.getWaitForActiveShards();
+        requestsPerSecond = other.getRequestsPerSecond();
     }
 
     public DeleteByQueryOptions(JsonObject json) {
-        types = json.getJsonArray(JSON_FIELD_TYPES, new JsonArray()).getList();
-        timeout = json.getString(JSON_FIELD_TIMEOUT);
-        routing = json.getString(JSON_FIELD_ROUTING);
+        super(json);
+
+        maxRetries = json.getInteger(JSON_FIELD_MAX_RETRIES);
+        slices = json.getInteger(JSON_FIELD_SLICES);
+        conflicts = Optional.ofNullable(json.getString(JSON_FIELD_CONFLICTS, null)).map(Conflicts::valueOf).orElse(null);
+        waitForActiveShards = json.getInteger(JSON_FIELD_WAIT_FOR_ACTIVE_SHARDS);
+        requestsPerSecond = json.getFloat(JSON_FIELD_REQUESTS_PER_SECOND);
     }
 
-    public List<String> getTypes() {
-        return types;
+    public Integer getMaxRetries() {
+        return maxRetries;
     }
 
-    public DeleteByQueryOptions addType(String type) {
-        types.add(type);
+    public DeleteByQueryOptions setMaxRetries(Integer maxRetries) {
+        this.maxRetries = maxRetries;
         return this;
     }
 
-    public String getTimeout() {
-        return timeout;
+    public Integer getSlices() {
+        return slices;
     }
 
-    public DeleteByQueryOptions setTimeout(String timeout) {
-        this.timeout = timeout;
+    public DeleteByQueryOptions setSlices(Integer slices) {
+        this.slices = slices;
         return this;
     }
 
-    public String getRouting() {
-        return routing;
+    public Conflicts getConflicts() {
+        return conflicts;
     }
 
-    public DeleteByQueryOptions setRouting(String routing) {
-        this.routing = routing;
+    public DeleteByQueryOptions setConflicts(Conflicts conflicts) {
+        this.conflicts = conflicts;
+        return this;
+    }
+
+    public Integer getWaitForActiveShards() {
+        return waitForActiveShards;
+    }
+
+    public DeleteByQueryOptions setWaitForActiveShards(Integer waitForActiveShards) {
+        this.waitForActiveShards = waitForActiveShards;
+        return this;
+    }
+
+    public Float getRequestsPerSecond() {
+        return requestsPerSecond;
+    }
+
+    public DeleteByQueryOptions setRequestsPerSecond(Float requestsPerSecond) {
+        this.requestsPerSecond = requestsPerSecond;
         return this;
     }
 
     public JsonObject toJson() {
+        final JsonObject json = super.toJson();
 
-        JsonObject json = new JsonObject();
-
-        if (!types.isEmpty()) json.put(JSON_FIELD_TYPES, new JsonArray(types));
-        if (timeout != null) json.put(JSON_FIELD_TIMEOUT, timeout);
-        if (routing != null) json.put(JSON_FIELD_ROUTING, routing);
+        if (maxRetries != null) json.put(JSON_FIELD_MAX_RETRIES, maxRetries);
+        if (slices != null) json.put(JSON_FIELD_SLICES, maxRetries);
+        if (conflicts != null) json.put(JSON_FIELD_CONFLICTS, conflicts.name());
+        if (waitForActiveShards != null) json.put(JSON_FIELD_WAIT_FOR_ACTIVE_SHARDS, waitForActiveShards);
+        if (requestsPerSecond != null) json.put(JSON_FIELD_REQUESTS_PER_SECOND, requestsPerSecond);
 
         return json;
     }

@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -39,7 +40,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ProxyHelper;
+import io.vertx.serviceproxy.ServiceProxyBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +53,7 @@ import java.util.List;
 public interface ElasticSearchService {
 
     static ElasticSearchService createEventBusProxy(Vertx vertx, String address) {
-        return ProxyHelper.createProxy(ElasticSearchService.class, vertx, address);
+        return new ServiceProxyBuilder(vertx).setAddress(address).build(ElasticSearchService.class);
     }
 
     @ProxyIgnore
@@ -86,7 +87,7 @@ public interface ElasticSearchService {
      */
     void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<IndexResponse>> resultHandler);
 
-    void bulkIndex(String index, String type, List<JsonObject> sources, IndexOptions options, Handler<AsyncResult<BulkIndexResponse>> resultHandler);
+    void bulkIndex(String index, String type, List<JsonObject> sources, BulkOptions options, Handler<AsyncResult<BulkIndexResponse>> resultHandler);
 
     /**
      * http://www.elastic.co/guide/en/elasticsearch/client/java-api/1.4/java-update-api.html
@@ -214,29 +215,28 @@ public interface ElasticSearchService {
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
-        deleteByQuery(Collections.singletonList(index), query, options, resultHandler);
+    default void deleteByQuery(String index, DeleteByQueryOptions options, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
+        deleteByQuery(Collections.singletonList(index), options, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteByQuery(String index, JsonObject query, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
-        deleteByQuery(Collections.singletonList(index), query, new DeleteByQueryOptions(), resultHandler);
+    default void deleteByQuery(String index, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
+        deleteByQuery(Collections.singletonList(index), new DeleteByQueryOptions(), resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteByQuery(List<String> indices, JsonObject query, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
-        deleteByQuery(indices, query, new DeleteByQueryOptions(), resultHandler);
+    default void deleteByQuery(List<String> indices, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler) {
+        deleteByQuery(indices, new DeleteByQueryOptions(), resultHandler);
     }
 
     /**
      * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
      *
      * @param indices       the index names
-     * @param query         the query that will be used for deletion
      * @param options       delete by query options (timeout, etc.)
      * @param resultHandler result handler callback
      */
-    void deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler);
+    void deleteByQuery(List<String> indices, DeleteByQueryOptions options, Handler<AsyncResult<DeleteByQueryResponse>> resultHandler);
 }

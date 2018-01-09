@@ -17,6 +17,7 @@ package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -57,7 +58,7 @@ public interface RxElasticSearchService {
 
     Observable<IndexResponse> index(String index, String type, JsonObject source, IndexOptions options);
 
-    Observable<BulkIndexResponse> bulkIndex(String index, String type, List<JsonObject> sources, IndexOptions options);
+    Observable<BulkIndexResponse> bulkIndex(String index, String type, List<JsonObject> sources, BulkOptions options);
 
     Observable<UpdateResponse> update(String index, String type, String id, UpdateOptions options);
 
@@ -107,17 +108,9 @@ public interface RxElasticSearchService {
 
     Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options);
 
-    default Observable<DeleteByQueryResponse> deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options) {
-        return deleteByQuery(Collections.singletonList(index), query, options);
+    default Observable<DeleteByQueryResponse> deleteByQuery(String index, DeleteByQueryOptions options) {
+        return deleteByQuery(Collections.singletonList(index), options);
     }
 
-    default Observable<DeleteByQueryResponse> deleteByQuery(String index, JsonObject query) {
-        return deleteByQuery(Collections.singletonList(index), query, new DeleteByQueryOptions());
-    }
-
-    default Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query) {
-        return deleteByQuery(indices, query, new DeleteByQueryOptions());
-    }
-
-    Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options);
+    Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, DeleteByQueryOptions options);
 }

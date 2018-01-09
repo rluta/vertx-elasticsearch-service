@@ -16,29 +16,30 @@
 package com.hubrick.vertx.elasticsearch.impl;
 
 import com.google.common.collect.ImmutableList;
+import com.hubrick.vertx.elasticsearch.model.BulkItemResponse;
 import com.hubrick.vertx.elasticsearch.model.Hit;
 import com.hubrick.vertx.elasticsearch.model.Hits;
+import com.hubrick.vertx.elasticsearch.model.Retries;
 import com.hubrick.vertx.elasticsearch.model.Shards;
 import com.hubrick.vertx.elasticsearch.model.Suggestion;
 import com.hubrick.vertx.elasticsearch.model.SuggestionEntry;
 import com.hubrick.vertx.elasticsearch.model.SuggestionEntryOption;
 import com.hubrick.vertx.elasticsearch.model.SuggestionType;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.action.ActionWriteResponse;
-import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.suggest.SuggestResponse;
 import org.elasticsearch.action.support.broadcast.BroadcastResponse;
+import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.InternalAggregation;
@@ -57,16 +58,30 @@ import java.util.stream.Collectors;
  */
 public class ElasticSearchServiceMapper {
 
-    public static com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse mapToDeleteByQueryResponse(DeleteByQueryResponse esDeleteByQueryResponse) {
+    public static com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse mapToDeleteByQueryResponse(BulkByScrollResponse esDeleteByQueryResponse) {
         final com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse deleteByQueryResponse = new com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse();
-
         deleteByQueryResponse.setRawResponse(readResponse(esDeleteByQueryResponse));
-        deleteByQueryResponse.setTook(esDeleteByQueryResponse.getTookInMillis());
+        deleteByQueryResponse.setTookMillis(esDeleteByQueryResponse.getTook().getMillis());
         deleteByQueryResponse.setTimedOut(esDeleteByQueryResponse.isTimedOut());
-        deleteByQueryResponse.setTotalFound(esDeleteByQueryResponse.getTotalFound());
-        deleteByQueryResponse.setTotalDeleted(esDeleteByQueryResponse.getTotalDeleted());
-        deleteByQueryResponse.setTotalFailed(esDeleteByQueryResponse.getTotalFailed());
-        deleteByQueryResponse.setTotalMissing(esDeleteByQueryResponse.getTotalMissing());
+        deleteByQueryResponse.setDeleted(esDeleteByQueryResponse.getDeleted());
+        deleteByQueryResponse.setBatches(esDeleteByQueryResponse.getBatches());
+        deleteByQueryResponse.setRetries(new Retries(esDeleteByQueryResponse.getBulkRetries(), esDeleteByQueryResponse.getSearchRetries()));
+        deleteByQueryResponse.setThrottledMillis(esDeleteByQueryResponse.getStatus().getThrottled().getMillis());
+        deleteByQueryResponse.setRequestsPerSecond(esDeleteByQueryResponse.getStatus().getRequestsPerSecond());
+        deleteByQueryResponse.setThrottledUntilMillis(esDeleteByQueryResponse.getStatus().getThrottledUntil().getMillis());
+        deleteByQueryResponse.setTotal(esDeleteByQueryResponse.getStatus().getTotal());
+        deleteByQueryResponse.setVersionConflicts(esDeleteByQueryResponse.getVersionConflicts());
+
+        if (esDeleteByQueryResponse.getSearchFailures() != null) {
+            esDeleteByQueryResponse.getSearchFailures().forEach(failure -> {
+                deleteByQueryResponse.addFailure(new JsonObject(failure.toString()));
+            });
+        }
+        if (esDeleteByQueryResponse.getBulkFailures() != null) {
+            esDeleteByQueryResponse.getBulkFailures().forEach(failure -> {
+                deleteByQueryResponse.addFailure(new JsonObject(failure.toString()));
+            });
+        }
 
         return deleteByQueryResponse;
     }
@@ -79,7 +94,7 @@ public class ElasticSearchServiceMapper {
         deleteResponse.setType(esDeleteResponse.getType());
         deleteResponse.setId(esDeleteResponse.getId());
         deleteResponse.setVersion(esDeleteResponse.getVersion());
-        deleteResponse.setFound(esDeleteResponse.isFound());
+        deleteResponse.setDeleted(esDeleteResponse.status().equals(RestStatus.OK));
 
         return deleteResponse;
     }
@@ -87,7 +102,8 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.GetResponse mapToUpdateResponse(GetResponse esGetResponse) {
         final com.hubrick.vertx.elasticsearch.model.GetResponse getResponse = new com.hubrick.vertx.elasticsearch.model.GetResponse();
 
-        getResponse.setRawResponse(readResponse(esGetResponse));
+        //getResponse.setRawResponse(readResponse(esGetResponse)); // FIXME: crashes...
+        getResponse.setRawResponse(new JsonObject(esGetResponse.toString()));
         getResponse.setResult(mapToGetResult(esGetResponse));
 
         return getResponse;
@@ -101,7 +117,7 @@ public class ElasticSearchServiceMapper {
         updateResponse.setType(esUpdateResponse.getType());
         updateResponse.setId(esUpdateResponse.getId());
         updateResponse.setVersion(esUpdateResponse.getVersion());
-        updateResponse.setCreated(esUpdateResponse.isCreated());
+        updateResponse.setCreated(esUpdateResponse.status().equals(RestStatus.CREATED));
 
         if (esUpdateResponse.getGetResult() != null) {
             updateResponse.setResult(mapToGetResult(esUpdateResponse.getGetResult()));
@@ -118,7 +134,7 @@ public class ElasticSearchServiceMapper {
         indexResponse.setType(esIndexResponse.getType());
         indexResponse.setId(esIndexResponse.getId());
         indexResponse.setVersion(esIndexResponse.getVersion());
-        indexResponse.setCreated(esIndexResponse.isCreated());
+        indexResponse.setCreated(esIndexResponse.status().equals(RestStatus.CREATED));
 
         return indexResponse;
     }
@@ -126,10 +142,10 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.BulkIndexResponse mapToBulkIndexResponse(BulkResponse bulkResponse) {
         final com.hubrick.vertx.elasticsearch.model.BulkIndexResponse bulkIndexResponse = new com.hubrick.vertx.elasticsearch.model.BulkIndexResponse();
 
-        final BulkItemResponse[] bulkResponseItems = bulkResponse.getItems();
+        final org.elasticsearch.action.bulk.BulkItemResponse[] bulkResponseItems = bulkResponse.getItems();
 
-        final ImmutableList.Builder<com.hubrick.vertx.elasticsearch.model.BulkItemResponse> bulkResponseItemsBuilder = ImmutableList.builder();
-        for (BulkItemResponse bulkItemResponse : bulkResponseItems) {
+        final ImmutableList.Builder<BulkItemResponse> bulkResponseItemsBuilder = ImmutableList.builder();
+        for (org.elasticsearch.action.bulk.BulkItemResponse bulkItemResponse : bulkResponseItems) {
                bulkResponseItemsBuilder.add(mapToBulkItemResponse(bulkItemResponse));
         }
 
@@ -139,7 +155,7 @@ public class ElasticSearchServiceMapper {
         return bulkIndexResponse;
     }
 
-    public static com.hubrick.vertx.elasticsearch.model.BulkItemResponse mapToBulkItemResponse(BulkItemResponse itemResponse) {
+    public static BulkItemResponse mapToBulkItemResponse(org.elasticsearch.action.bulk.BulkItemResponse itemResponse) {
         final com.hubrick.vertx.elasticsearch.model.BulkItemResponse bulkItemResponse = new com.hubrick.vertx.elasticsearch.model.BulkItemResponse();
 
         bulkItemResponse.setId(itemResponse.getId());
@@ -148,7 +164,7 @@ public class ElasticSearchServiceMapper {
         return bulkItemResponse;
     }
 
-    public static com.hubrick.vertx.elasticsearch.model.SuggestResponse mapToSuggestResponse(SuggestResponse esSuggestResponse) {
+    public static com.hubrick.vertx.elasticsearch.model.SuggestResponse mapToSuggestResponse(SearchResponse esSuggestResponse) {
         final com.hubrick.vertx.elasticsearch.model.SuggestResponse searchResponse = new com.hubrick.vertx.elasticsearch.model.SuggestResponse();
 
         searchResponse.setRawResponse(new JsonObject(esSuggestResponse.toString()));
@@ -166,7 +182,8 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.SearchResponse mapToSearchResponse(SearchResponse esSearchResponse) {
         final com.hubrick.vertx.elasticsearch.model.SearchResponse searchResponse = new com.hubrick.vertx.elasticsearch.model.SearchResponse();
 
-        searchResponse.setRawResponse(readResponse(esSearchResponse));
+        //searchResponse.setRawResponse(readResponse(esSearchResponse)); // crashes...
+        searchResponse.setRawResponse(new JsonObject(esSearchResponse.toString()));
         searchResponse.setTook(esSearchResponse.getTookInMillis());
         searchResponse.setTimedOut(esSearchResponse.isTimedOut());
         searchResponse.setShards(mapToShards(esSearchResponse));
@@ -191,7 +208,7 @@ public class ElasticSearchServiceMapper {
         return searchResponse;
     }
 
-    private static Shards mapToShards(ActionWriteResponse.ShardInfo shardInfo) {
+    private static Shards mapToShards(ReplicationResponse.ShardInfo shardInfo) {
         return new Shards()
                 .setFailed(shardInfo.getFailed())
                 .setSuccessful(shardInfo.getSuccessful())

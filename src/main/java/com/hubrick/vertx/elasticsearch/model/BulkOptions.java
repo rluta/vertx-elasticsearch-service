@@ -19,23 +19,26 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Options for admin put mapping operations
+ * Index operation options
  */
 @DataObject
-public class MappingOptions {
+public class BulkOptions extends AbstractWriteOptions<BulkOptions> {
 
-    public MappingOptions() {
+
+    public BulkOptions() {
     }
 
-    public MappingOptions(MappingOptions other) {
+    public BulkOptions(BulkOptions other) {
+        super(other);
     }
 
-    public MappingOptions(JsonObject json) {
+    public BulkOptions(JsonObject json) {
+        super(json);
     }
 
+    @Override
     public JsonObject toJson() {
-        final JsonObject json = new JsonObject();
-        return json;
+        return super.toJson();
     }
 
 }

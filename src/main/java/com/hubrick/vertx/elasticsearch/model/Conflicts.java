@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hubrick.vertx.hk2;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+package com.hubrick.vertx.elasticsearch.model;
 
 /**
- * HK2 bootstrap binder
+ * @author Emir Dizdarevic
+ * @since 2.0.0
  */
-public class BootstrapBinder extends AbstractBinder {
-
-    /**
-     * Implement to provide binding definitions using the exposed binding
-     * methods.
-     */
-    @Override
-    protected void configure() {
-        install(new com.hubrick.vertx.elasticsearch.hk2.ElasticSearchBinder());
-    }
-
+public enum Conflicts {
+    PROCEED
 }

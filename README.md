@@ -11,8 +11,7 @@ The difference to [ef-labs/vertx-elasticsearch-service](https://github.com/ef-la
 | --------- | -------------- | ---------------------------     |
 | 3.3.3     | 2.2.2          | 1.0.0                           |
 | 3.3.3     | 2.2.2          | 1.1.0                           |
-| 3.3.3     | 2.2.2          | 1.2.0                           |
-
+| 3.5.0     | 5.6.1          | 2.0.0                           |
 
 ## Compatibility
 - Java 8+
@@ -25,7 +24,7 @@ The difference to [ef-labs/vertx-elasticsearch-service](https://github.com/ef-la
 <dependency>
     <groupId>com.hubrick.vertx</groupId>
     <artifactId>vertx-elasticsearch-service</artifactId>
-    <version>1.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -39,8 +38,7 @@ The configuration options are as follows:
     "address": <address>,
     "transportAddresses": [ { "hostname": <hostname>, "port": <port> } ],
     "cluster_name": <cluster_name>,
-    "client_transport_sniff": <client_transport_sniff>,
-    "requireUnits": false
+    "client_transport_sniff": <client_transport_sniff>
 }
 ```
 
@@ -50,7 +48,6 @@ The configuration options are as follows:
     * `port` - the port of the node to connect to.  The default is `9300`.
 * `cluster_name` - the elastic search cluster name.  The default is `"elasticsearch"`.
 * `client_transport_sniff` - the client will sniff the rest of the cluster and add those into its list of machines to use.  The default is `true`.
-* `requireUnits` - boolean flag whether units are required.  The default is `false`.
 
 An example configuration would be:
 

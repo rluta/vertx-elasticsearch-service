@@ -16,17 +16,20 @@
 package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.action.WriteConsistencyLevel;
+
+import java.util.Optional;
 
 /**
  * Abstract options
  */
 public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> extends AbstractOptions<T> {
 
-    private WriteConsistencyLevel consistencyLevel;
+    private RefreshPolicy refreshPolicy;
+    private Integer waitForActiveShard;
     private String timeout;
 
-    public static final String FIELD_CONSISTENCY_LEVEL = "consistencyLevel";
+    public static final String FIELD_REFRESH_POLICY = "refreshPolicy";
+    public static final String FIELD_WAIT_FOR_ACTIVE_SHARD = "waitForActiveShard";
     public static final String FIELD_TIMEOUT = "timeout";
 
     protected AbstractWriteOptions() {
@@ -34,26 +37,34 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
 
     protected AbstractWriteOptions(T other) {
         super(other);
-        consistencyLevel = other.getConsistencyLevel();
+        refreshPolicy = other.getRefreshPolicy();
+        waitForActiveShard = other.getWaitForActiveShard();
         timeout = other.getTimeout();
     }
 
     protected AbstractWriteOptions(JsonObject json) {
         super(json);
 
+        refreshPolicy = Optional.ofNullable(json.getString(FIELD_REFRESH_POLICY)).map(RefreshPolicy::valueOf).orElse(null);
         timeout = json.getString(FIELD_TIMEOUT);
-
-        String s = json.getString(FIELD_CONSISTENCY_LEVEL);
-        if (s != null) consistencyLevel = WriteConsistencyLevel.fromString(s);
-
+        waitForActiveShard = Optional.ofNullable(json.getString(FIELD_WAIT_FOR_ACTIVE_SHARD)).map(Integer::valueOf).orElse(null);
     }
 
-    public WriteConsistencyLevel getConsistencyLevel() {
-        return consistencyLevel;
+    public RefreshPolicy getRefreshPolicy() {
+        return refreshPolicy;
     }
 
-    public T setConsistencyLevel(WriteConsistencyLevel consistencyLevel) {
-        this.consistencyLevel = consistencyLevel;
+    public T setRefresh(RefreshPolicy refreshPolicy) {
+        this.refreshPolicy = refreshPolicy;
+        return returnThis();
+    }
+
+    public Integer getWaitForActiveShard() {
+        return waitForActiveShard;
+    }
+
+    public T setWaitForActiveShard(Integer waitForActiveShard) {
+        this.waitForActiveShard = waitForActiveShard;
         return returnThis();
     }
 
@@ -70,8 +81,9 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
     public JsonObject toJson() {
         JsonObject json = super.toJson();
 
-        if (getConsistencyLevel() != null) {
-            json.put(FIELD_CONSISTENCY_LEVEL, getConsistencyLevel().toString().toLowerCase());
+        if (getRefreshPolicy() != null) json.put(FIELD_REFRESH_POLICY, getRefreshPolicy().name());
+        if (getWaitForActiveShard() != null) {
+            json.put(FIELD_WAIT_FOR_ACTIVE_SHARD, getWaitForActiveShard().toString());
         }
         if (getTimeout() != null) json.put(FIELD_TIMEOUT, getTimeout());
 

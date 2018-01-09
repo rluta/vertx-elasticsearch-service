@@ -16,8 +16,8 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.index.VersionType;
 import org.junit.Test;
@@ -47,8 +47,7 @@ public class IndexOptionsTest {
                 .setRouting("routing")
                 .setParent("parent")
                 .setOpType(IndexRequest.OpType.CREATE)
-                .setRefresh(true)
-                .setConsistencyLevel(WriteConsistencyLevel.ALL)
+                .setRefresh(RefreshPolicy.IMMEDIATE)
                 .setVersion(2L)
                 .setVersionType(VersionType.EXTERNAL)
                 .setTimestamp("timestamp")
@@ -56,7 +55,7 @@ public class IndexOptionsTest {
                 .setTimeout("timeout");
 
         json1 = options1.toJson();
-        assertEquals(11, json1.fieldNames().size());
+        assertEquals(10, json1.fieldNames().size());
 
         options2 = new IndexOptions(json1);
         json2 = options2.toJson();

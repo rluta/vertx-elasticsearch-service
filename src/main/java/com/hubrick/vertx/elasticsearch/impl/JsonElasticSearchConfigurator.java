@@ -17,12 +17,13 @@ package com.hubrick.vertx.elasticsearch.impl;
 
 import com.hubrick.vertx.elasticsearch.ElasticSearchConfigurator;
 import io.vertx.core.Vertx;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.transport.TransportAddress;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 
 import javax.inject.Inject;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +36,11 @@ public class JsonElasticSearchConfigurator implements ElasticSearchConfigurator 
     protected String clusterName;
     protected boolean clientTransportSniff;
     protected final List<TransportAddress> transportAddresses = new ArrayList<>();
-    protected boolean requireUnits;
 
     public static final String CONFIG_NAME = "elasticsearch";
     public static final String CONFIG_TRANSPORT_ADDRESSES = "transportAddresses";
     public static final String CONFIG_HOSTNAME = "hostname";
     public static final String CONFIG_PORT = "port";
-    public static final String CONFIG_REQUIRE_UNITS = "requireUnits";
 
     @Inject
     public JsonElasticSearchConfigurator(Vertx vertx) {
@@ -64,7 +63,6 @@ public class JsonElasticSearchConfigurator implements ElasticSearchConfigurator 
         initClusterName(config);
         initClientTransportSniff(config);
         initTransportAddresses(config);
-        initRequireUnits(config);
     }
 
     protected void initClusterName(JsonObject config) {
@@ -76,29 +74,27 @@ public class JsonElasticSearchConfigurator implements ElasticSearchConfigurator 
     }
 
     protected void initTransportAddresses(JsonObject config) {
+        try {
+            JsonArray jsonArray = config.getJsonArray(CONFIG_TRANSPORT_ADDRESSES);
+            if (jsonArray != null) {
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    JsonObject transportAddress = jsonArray.getJsonObject(i);
+                    String hostname = transportAddress.getString(CONFIG_HOSTNAME);
 
-        JsonArray jsonArray = config.getJsonArray(CONFIG_TRANSPORT_ADDRESSES);
-        if (jsonArray != null) {
-            for (int i = 0; i < jsonArray.size(); i++) {
-                JsonObject transportAddress = jsonArray.getJsonObject(i);
-                String hostname = transportAddress.getString(CONFIG_HOSTNAME);
-
-                if (hostname != null && !hostname.isEmpty()) {
-                    int port = transportAddress.getInteger(CONFIG_PORT, 9300);
-                    transportAddresses.add(new InetSocketTransportAddress(new InetSocketAddress(hostname, port)));
+                    if (hostname != null && !hostname.isEmpty()) {
+                        int port = transportAddress.getInteger(CONFIG_PORT, 9300);
+                        transportAddresses.add(new InetSocketTransportAddress(InetAddress.getByName(hostname), port));
+                    }
                 }
             }
+
+            // If no addresses are configured, add local host on the default port
+            if (transportAddresses.size() == 0) {
+                transportAddresses.add(new InetSocketTransportAddress(new InetSocketAddress("localhost", 9300)));
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Can't create transport client", e);
         }
-
-        // If no addresses are configured, add local host on the default port
-        if (transportAddresses.size() == 0) {
-            transportAddresses.add(new InetSocketTransportAddress(new InetSocketAddress("localhost", 9300)));
-        }
-
-    }
-
-    protected void initRequireUnits(JsonObject config) {
-        requireUnits = config.getBoolean(CONFIG_REQUIRE_UNITS, false);
     }
 
     @Override
@@ -109,11 +105,6 @@ public class JsonElasticSearchConfigurator implements ElasticSearchConfigurator 
     @Override
     public boolean getClientTransportSniff() {
         return clientTransportSniff;
-    }
-
-    @Override
-    public boolean getSettingsRequireUnits() {
-        return false;
     }
 
     @Override

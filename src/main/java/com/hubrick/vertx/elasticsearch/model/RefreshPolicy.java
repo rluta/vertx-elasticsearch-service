@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hubrick.vertx.hk2;
+package com.hubrick.vertx.elasticsearch.model;
 
 /**
- * ElasticSearch HK2 Binder
- * @deprecated Use {@link com.hubrick.vertx.elasticsearch.hk2.ElasticSearchBinder} instead
+ * @author Emir Dizdarevic
+ * @since 2.0.0
  */
-@Deprecated
-public class ElasticSearchBinder extends com.hubrick.vertx.elasticsearch.hk2.ElasticSearchBinder {
+public enum RefreshPolicy {
+    NONE,
+    IMMEDIATE,
+    WAIT_UNTIL;
 }
