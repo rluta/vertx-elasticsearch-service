@@ -23,6 +23,7 @@ import com.hubrick.vertx.elasticsearch.model.AbstractSearchOptions;
 import com.hubrick.vertx.elasticsearch.model.AggregationOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSortOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.Conflicts;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
@@ -197,7 +198,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void bulkIndex(final String index, final String type, final List<JsonObject> sources, final IndexOptions options, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkIndexResponse>> resultHandler) {
+    public void bulkIndex(final String index, final String type, final List<JsonObject> sources, final BulkOptions options, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkIndexResponse>> resultHandler) {
         final BulkRequestBuilder builder = client.prepareBulk();
 
         if (options != null) {

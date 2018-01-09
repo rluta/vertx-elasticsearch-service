@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -86,7 +87,7 @@ public interface ElasticSearchService {
      */
     void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<IndexResponse>> resultHandler);
 
-    void bulkIndex(String index, String type, List<JsonObject> sources, IndexOptions options, Handler<AsyncResult<BulkIndexResponse>> resultHandler);
+    void bulkIndex(String index, String type, List<JsonObject> sources, BulkOptions options, Handler<AsyncResult<BulkIndexResponse>> resultHandler);
 
     /**
      * http://www.elastic.co/guide/en/elasticsearch/client/java-api/1.4/java-update-api.html

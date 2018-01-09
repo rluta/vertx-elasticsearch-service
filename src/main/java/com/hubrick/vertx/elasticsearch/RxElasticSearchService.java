@@ -17,6 +17,7 @@ package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -57,7 +58,7 @@ public interface RxElasticSearchService {
 
     Observable<IndexResponse> index(String index, String type, JsonObject source, IndexOptions options);
 
-    Observable<BulkIndexResponse> bulkIndex(String index, String type, List<JsonObject> sources, IndexOptions options);
+    Observable<BulkIndexResponse> bulkIndex(String index, String type, List<JsonObject> sources, BulkOptions options);
 
     Observable<UpdateResponse> update(String index, String type, String id, UpdateOptions options);
 

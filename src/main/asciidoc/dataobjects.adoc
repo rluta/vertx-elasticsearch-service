@@ -82,6 +82,28 @@
 |[[tookInMillis]]`tookInMillis`|`Number (Long)`|-
 |===
 
+[[BulkOptions]]
+== BulkOptions
+
+++++
+ Index operation options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[parent]]`parent`|`String`|-
+|[[refresh]]`refresh`|`link:enums.html#RefreshPolicy[RefreshPolicy]`|-
+|[[refreshPolicy]]`refreshPolicy`|`link:enums.html#RefreshPolicy[RefreshPolicy]`|-
+|[[routing]]`routing`|`String`|-
+|[[timeout]]`timeout`|`String`|-
+|[[version]]`version`|`Number (Long)`|-
+|[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
+|[[waitForActiveShard]]`waitForActiveShard`|`Number (Integer)`|-
+|===
+
 [[CompletionSuggestOption]]
 == CompletionSuggestOption
 

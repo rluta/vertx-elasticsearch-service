@@ -24,6 +24,7 @@ import com.hubrick.vertx.elasticsearch.RxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
+import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
@@ -346,7 +347,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test8BulkIndex(TestContext testContext) throws Exception {
+    public void testBulkIndex(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         final JsonObject source1 = new JsonObject()
@@ -365,7 +366,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                     .add("1")
                     .add("2")));
 
-        final IndexOptions options = new IndexOptions().setId(id);
+        final BulkOptions options = new BulkOptions();
         rxService.bulkIndex(index, type, ImmutableList.of(source1, source2), options)
             .subscribe(
                 bulkIndexResponse -> {
