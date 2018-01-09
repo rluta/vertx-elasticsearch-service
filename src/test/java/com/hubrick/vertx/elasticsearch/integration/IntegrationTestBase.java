@@ -100,11 +100,11 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         rxAdminService = new DefaultRxElasticSearchAdminService(adminService);
 
         final CountDownLatch latch = new CountDownLatch(1);
-        adminService.deleteIndex(index, result -> {
-            adminService.createIndex(index, new JsonObject(), new CreateIndexOptions(), result2 -> {
-                adminService.putMapping(index, type, readJson("mapping.json"), result3 -> {
-                    if (result.failed()) {
-                        result.cause().printStackTrace();
+        adminService.deleteIndex(index, deleteIndexResult -> {
+            adminService.createIndex(index, new JsonObject(), new CreateIndexOptions(), createMappingResult -> {
+                adminService.putMapping(index, type, readJson("mapping.json"), putMappingResult -> {
+                    if (putMappingResult.failed()) {
+                        putMappingResult.cause().printStackTrace();
                         testContext.fail();
                     }
                     latch.countDown();
