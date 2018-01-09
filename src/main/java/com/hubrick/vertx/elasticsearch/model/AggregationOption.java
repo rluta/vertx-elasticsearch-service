@@ -28,6 +28,7 @@ import java.util.List;
  */
 @DataObject
 public class AggregationOption {
+
     private String name;
     private AggregationType type;
     private JsonObject definition;

@@ -20,26 +20,33 @@ import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.Optional;
+
 @DataObject
 public class DeleteByQueryResponse extends AbstractRawResponse<DeleteByQueryResponse> {
 
-    private Long took; // in ms
+    private Long tookMillis;
     private Boolean timedOut;
     private Long deleted;
     private Integer batches;
     private Long versionConflicts;
-    private Long retries;
-    private Long throttled; // in ms
+    private Retries retries;
+    private Long throttledMillis;
+    private Float requestsPerSecond;
+    private Long throttledUntilMillis;
+    private Long total;
     private JsonArray failures = new JsonArray();
 
-
-    public static final String JSON_FIELD_TOOK = "took";
+    public static final String JSON_FIELD_TOOK_MILLIS = "tookMillis";
     public static final String JSON_FIELD_TIMED_OUT = "timedOut";
     public static final String JSON_FIELD_DELETED = "deleted";
     public static final String JSON_FIELD_BATCHES = "batches";
     public static final String JSON_FIELD_VERSION_CONFLICTS = "versionConflicts";
     public static final String JSON_FIELD_RETRIES = "retries";
-    public static final String JSON_FIELD_THROTTLED = "throttled";
+    public static final String JSON_FIELD_THROTTLED_MILLIS = "throttledMillis";
+    public static final String JSON_FIELD_REQUESTS_PER_SECOND = "requestsPerSecond";
+    public static final String JSON_FIELD_THROTTLED_UNTIL_MILLIS = "throttledUntilMillis";
+    public static final String JSON_FIELD_TOTAL = "total";
     public static final String JSON_FIELD_FAILURES = "failures";
 
     public DeleteByQueryResponse() {
@@ -48,91 +55,113 @@ public class DeleteByQueryResponse extends AbstractRawResponse<DeleteByQueryResp
     public DeleteByQueryResponse(DeleteByQueryResponse other) {
         super(other);
 
-        this.took = other.getTook();
+        this.tookMillis = other.getTookMillis();
         this.timedOut = other.getTimedOut();
         this.deleted = other.getDeleted();
         this.batches = other.getBatches();
         this.versionConflicts = other.getVersionConflicts();
         this.retries = other.getRetries();
-        this.throttled = other.getThrottled();
+        this.throttledMillis = other.getThrottledMillis();
+        this.requestsPerSecond = other.getRequestsPerSecond();
+        this.throttledUntilMillis = other.getThrottledUntilMillis();
+        this.total = other.getTotal();
         this.failures = other.getFailures();
-
     }
 
     public DeleteByQueryResponse(JsonObject json) {
         super(json);
 
-        this.took = json.getLong(JSON_FIELD_TOOK);
+        this.tookMillis = json.getLong(JSON_FIELD_TOOK_MILLIS);
         this.timedOut = json.getBoolean(JSON_FIELD_TIMED_OUT);
         this.deleted = json.getLong(JSON_FIELD_DELETED);
         this.batches = json.getInteger(JSON_FIELD_BATCHES);
         this.versionConflicts = json.getLong(JSON_FIELD_VERSION_CONFLICTS);
-        this.retries = json.getLong(JSON_FIELD_RETRIES);
-        this.throttled = json.getLong(JSON_FIELD_THROTTLED);
+        this.retries = Optional.ofNullable(json.getJsonObject(JSON_FIELD_RETRIES)).map(Retries::new).orElse(null);
+        this.throttledMillis = json.getLong(JSON_FIELD_THROTTLED_MILLIS);
+        this.requestsPerSecond = json.getFloat(JSON_FIELD_REQUESTS_PER_SECOND);
+        this.throttledUntilMillis = json.getLong(JSON_FIELD_THROTTLED_UNTIL_MILLIS);
+        this.total = json.getLong(JSON_FIELD_TOTAL);
         this.failures = json.getJsonArray(JSON_FIELD_FAILURES);
     }
 
-    public Long getTook() {
-        return took;
+    public Long getTookMillis() {
+        return tookMillis;
     }
 
-    public DeleteByQueryResponse setTook(Long took) {
-        this.took = took;
-        return this;
+    public void setTookMillis(Long tookMillis) {
+        this.tookMillis = tookMillis;
     }
 
     public Boolean getTimedOut() {
         return timedOut;
     }
 
-    public DeleteByQueryResponse setTimedOut(Boolean timedOut) {
+    public void setTimedOut(Boolean timedOut) {
         this.timedOut = timedOut;
-        return this;
     }
 
     public Long getDeleted() {
         return deleted;
     }
 
-    public DeleteByQueryResponse setDeleted(Long deleted) {
+    public void setDeleted(Long deleted) {
         this.deleted = deleted;
-        return this;
     }
 
     public Integer getBatches() {
         return batches;
     }
 
-    public DeleteByQueryResponse setBatches(Integer batches) {
+    public void setBatches(Integer batches) {
         this.batches = batches;
-        return this;
     }
 
     public Long getVersionConflicts() {
         return versionConflicts;
     }
 
-    public DeleteByQueryResponse setVersionConflicts(Long versionConflicts) {
+    public void setVersionConflicts(Long versionConflicts) {
         this.versionConflicts = versionConflicts;
-        return this;
     }
 
-    public Long getRetries() {
+    public Retries getRetries() {
         return retries;
     }
 
-    public DeleteByQueryResponse setRetries(Long retries) {
+    public void setRetries(Retries retries) {
         this.retries = retries;
-        return this;
     }
 
-    public Long getThrottled() {
-        return throttled;
+    public Long getThrottledMillis() {
+        return throttledMillis;
     }
 
-    public DeleteByQueryResponse setThrottled(Long throttled) {
-        this.throttled = throttled;
-        return this;
+    public void setThrottledMillis(Long throttledMillis) {
+        this.throttledMillis = throttledMillis;
+    }
+
+    public Float getRequestsPerSecond() {
+        return requestsPerSecond;
+    }
+
+    public void setRequestsPerSecond(Float requestsPerSecond) {
+        this.requestsPerSecond = requestsPerSecond;
+    }
+
+    public Long getThrottledUntilMillis() {
+        return throttledUntilMillis;
+    }
+
+    public void setThrottledUntilMillis(Long throttledUntilMillis) {
+        this.throttledUntilMillis = throttledUntilMillis;
+    }
+
+    public Long getTotal() {
+        return total;
+    }
+
+    public void setTotal(Long total) {
+        this.total = total;
     }
 
     public JsonArray getFailures() {
@@ -154,13 +183,16 @@ public class DeleteByQueryResponse extends AbstractRawResponse<DeleteByQueryResp
 
         final JsonObject json = new JsonObject();
 
-        if (took != null) json.put(JSON_FIELD_TOOK, took);
+        if (tookMillis != null) json.put(JSON_FIELD_TOOK_MILLIS, tookMillis);
         if (timedOut != null) json.put(JSON_FIELD_TIMED_OUT, timedOut);
         if (deleted != null) json.put(JSON_FIELD_DELETED, deleted);
         if (batches != null) json.put(JSON_FIELD_BATCHES, batches);
         if (versionConflicts != null) json.put(JSON_FIELD_VERSION_CONFLICTS, versionConflicts);
-        if (retries != null) json.put(JSON_FIELD_RETRIES, retries);
-        if (throttled != null) json.put(JSON_FIELD_THROTTLED, throttled);
+        if (retries != null) json.put(JSON_FIELD_RETRIES, retries.toJson());
+        if (throttledMillis != null) json.put(JSON_FIELD_THROTTLED_MILLIS, throttledMillis);
+        if (requestsPerSecond != null) json.put(JSON_FIELD_REQUESTS_PER_SECOND, requestsPerSecond);
+        if (throttledUntilMillis != null) json.put(JSON_FIELD_THROTTLED_UNTIL_MILLIS, throttledUntilMillis);
+        if (total != null) json.put(JSON_FIELD_TOTAL, total);
         if (failures != null) json.put(JSON_FIELD_FAILURES, failures);
 
         return json.mergeIn(super.toJson());

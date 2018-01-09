@@ -25,8 +25,11 @@ import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
@@ -45,28 +48,26 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.FixMethodOrder;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.hubrick.vertx.elasticsearch.VertxMatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 /**
  * {@link ElasticSearchServiceVerticle} integration test
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
 
     private ElasticSearchService service;
@@ -97,6 +98,21 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
         adminService = ElasticSearchAdminService.createEventBusProxy(vertx, "et.elasticsearch.admin");
         rxService = new DefaultRxElasticSearchService(service);
         rxAdminService = new DefaultRxElasticSearchAdminService(adminService);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        adminService.deleteIndex(index, result -> {
+            adminService.createIndex(index, new JsonObject(), new CreateIndexOptions(), result2 -> {
+                adminService.putMapping(index, type, readJson("mapping.json"), result3 -> {
+                    if (result.failed()) {
+                        result.cause().printStackTrace();
+                        testContext.fail();
+                    }
+                    latch.countDown();
+                });
+            });
+        });
+
+        latch.await(15, TimeUnit.SECONDS);
     }
 
     @After
@@ -106,7 +122,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test1Index(TestContext testContext) throws Exception {
+    public void testIndex(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         JsonObject source = new JsonObject()
@@ -135,10 +151,20 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test2Get(TestContext testContext) throws Exception {
+    public void testGet(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        rxService.get(index, type, id)
+        JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
+
+        IndexOptions options = new IndexOptions().setId(id);
+        rxService.index(index, type, source, options)
+                .flatMap(indexResponse -> rxService.get(index, type, id))
                 .subscribe(
                         getResponse -> {
                             assertThat(testContext, getResponse.getResult().getIndex(), is(index));
@@ -158,17 +184,17 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test3Search_Simple(TestContext testContext) throws Exception {
+    public void testSearchSimple(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         SearchOptions options = new SearchOptions()
-                .setTimeout("1000")
+                .setTimeoutInMillis(1000l)
                 .setSize(10)
                 .setFrom(10)
                 .setSourceIncludes(Arrays.asList("user", "message"))
                 .addFieldSort("user", SortOrder.DESC)
-                .addScripSort("doc['message']", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
-                .addScriptField("script_field", "doc['message']", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
+                .addScripSort("doc['message']", "groovy", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
+                .addScriptField("script_field", "doc['message']", "groovy", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
         rxService.search(index, options)
@@ -182,12 +208,12 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test4Search_EventBus_Invalid_Enum(TestContext testContext) throws Exception {
+    public void testSearch_EventBusInvalidEnum(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         JsonObject json = new JsonObject()
                 .put("indices", new JsonArray().add(index))
-                .put("options", new JsonObject().put("templateType", "invalid_type"));
+                .put("options", new JsonObject().put("searchType", "invalid_type"));
 
         DeliveryOptions options = new DeliveryOptions();
         options.addHeader("action", "search");
@@ -201,7 +227,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test5Scroll(TestContext testContext) throws Exception {
+    public void testScroll(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         SearchOptions options = new SearchOptions()
@@ -209,18 +235,35 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 .setScroll("5m")
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
-        rxService.search(index, options)
+        JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
+
+        final UUID documentId = UUID.randomUUID();
+        IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
+
+        rxService.index(index, type, source, indexOptions)
+                .flatMap(indexResponse -> {
+                    final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+                    vertx.setTimer(2000l, event -> observableFuture.toHandler().handle(Future.succeededFuture()));
+                    return observableFuture;
+                })
+                .flatMap(aVoid -> rxService.search(index, options))
                 .flatMap(searchResponse -> {
                     String scrollId = searchResponse.getScrollId();
                     assertThat(testContext, scrollId, notNullValue());
+                    assertThat(testContext, searchResponse.getHits().getHits().size(), greaterThan(0));
 
                     SearchScrollOptions scrollOptions = new SearchScrollOptions().setScroll("5m");
                     return rxService.searchScroll(scrollId, scrollOptions);
                 })
                 .subscribe(
                         searchResponse -> {
-                            assertThat(testContext,  searchResponse.getHits().getHits().size(), greaterThan(0));
-
+                            assertThat(testContext, searchResponse.getHits().getTotal(), greaterThan(0l));
                             async.complete();
                         },
                         error -> testContext.fail(error)
@@ -228,20 +271,15 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test6Suggest(TestContext testContext) throws Exception {
+    public void testSuggest(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        JsonObject mapping = readJson("mapping.json");
+        final JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("message_suggest", source_message);
 
-        rxAdminService.putMapping(index, type, mapping)
-                .flatMap(result -> {
-                    JsonObject source = new JsonObject()
-                            .put("user", source_user)
-                            .put("message", source_message)
-                            .put("message_suggest", source_message);
-
-                    return rxService.index(index, type, source);
-                })
+        rxService.index(index, type, source)
                 .flatMap(result -> {
                     final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
                     vertx.setTimer(1000, id -> observableFuture.toHandler().handle(Future.succeededFuture()));
@@ -271,7 +309,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test7DeleteByQuery_Simple(TestContext testContext) throws Exception {
+    public void testDeleteByQuery_Simple(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         JsonObject source = new JsonObject()
@@ -292,8 +330,8 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                     return observableFuture;
                 })
                 .flatMap(aVoid -> {
-                    final DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions().setTimeout("1000");
-                    return rxService.deleteByQuery(index, new JsonObject().put("ids", new JsonObject().put("values", new JsonArray().add(documentId.toString()))), deleteByQueryOptions);
+                    final DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions().setTimeoutInMillis(1000l);
+                    return rxService.deleteByQuery(index, deleteByQueryOptions.setQuery(new JsonObject().put("ids", new JsonObject().put("values", new JsonArray().add(documentId.toString())))));
                 })
                 .subscribe(
                         deleteByQueryResponse -> {
@@ -345,16 +383,32 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void test99Delete(TestContext testContext) throws Exception {
-
+    public void testDelete(TestContext testContext) throws Exception {
         final Async async = testContext.async();
-        rxService.delete(index, type, id)
+        final JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
+
+        final UUID documentId = UUID.randomUUID();
+        final IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
+
+        rxService.index(index, type, source, indexOptions)
+                .flatMap(indexResponse -> {
+                    final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+                    vertx.setTimer(2000l, event -> observableFuture.toHandler().handle(Future.succeededFuture()));
+                    return observableFuture;
+                })
+                .flatMap(indexResponse -> rxService.delete(index, type, documentId.toString(), new DeleteOptions().setRefresh(RefreshPolicy.IMMEDIATE)))
                 .subscribe(
                         deleteResponse -> {
                             assertThat(testContext, deleteResponse.getIndex(), is(index));
                             assertThat(testContext, deleteResponse.getType(), is(type));
-                            assertThat(testContext, deleteResponse.getId(), is(id));
-                            assertThat(testContext, deleteResponse.getFound(), is(true));
+                            assertThat(testContext, deleteResponse.getId(), is(documentId.toString()));
+                            assertThat(testContext, deleteResponse.getDeleted(), is(true));
                             assertThat(testContext, deleteResponse.getVersion(), greaterThan(0L));
 
                             async.complete();

@@ -45,7 +45,7 @@ public class SearchOptionsTest {
                 .addType("type2")
                 .setSearchType(SearchType.QUERY_THEN_FETCH)
                 .setScroll("scroll")
-                .setTimeout("timeout")
+                .setTimeoutInMillis(1000l)
                 .setTerminateAfter(10)
                 .setRouting("routing")
                 .setPreference("preference")
@@ -63,7 +63,7 @@ public class SearchOptionsTest {
                 .addFieldSort("status", SortOrder.ASC)
                 .addFieldSort("insert_date", SortOrder.ASC)
                 .addScripSort("doc['score']", ScriptSortOption.Type.NUMBER, new JsonObject(), SortOrder.ASC)
-                .addScriptField("script_field", "doc['score']", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")));
+                .addScriptField("script_field", "doc['score']", "groovy", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")));
 
         json1 = options1.toJson();
 

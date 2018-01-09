@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.index.VersionType;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class DeleteOptionsTest {
 
         options1 = new DeleteOptions()
                 .setParent("parent")
-                .setRefresh(true)
+                .setRefresh(RefreshPolicy.IMMEDIATE)
                 .setRouting("routing")
                 .setTimeout("timeout")
                 .setVersion(10000L)

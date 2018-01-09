@@ -107,17 +107,9 @@ public interface RxElasticSearchService {
 
     Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options);
 
-    default Observable<DeleteByQueryResponse> deleteByQuery(String index, JsonObject query, DeleteByQueryOptions options) {
-        return deleteByQuery(Collections.singletonList(index), query, options);
+    default Observable<DeleteByQueryResponse> deleteByQuery(String index, DeleteByQueryOptions options) {
+        return deleteByQuery(Collections.singletonList(index), options);
     }
 
-    default Observable<DeleteByQueryResponse> deleteByQuery(String index, JsonObject query) {
-        return deleteByQuery(Collections.singletonList(index), query, new DeleteByQueryOptions());
-    }
-
-    default Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query) {
-        return deleteByQuery(indices, query, new DeleteByQueryOptions());
-    }
-
-    Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options);
+    Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, DeleteByQueryOptions options);
 }

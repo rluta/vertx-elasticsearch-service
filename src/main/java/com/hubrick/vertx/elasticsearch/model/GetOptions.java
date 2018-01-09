@@ -34,6 +34,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
     private List<String> fetchSourceIncludes = new ArrayList<>();
     private List<String> fetchSourceExcludes = new ArrayList<>();
     private Boolean realtime;
+    private Boolean refresh;
 
     public static final String FIELD_PREFERENCE = "preference";
     public static final String FIELD_FIELDS = "fields";
@@ -41,6 +42,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
     public static final String FIELD_FETCH_SOURCE_INCLUDES = "fetchSourceIncludes";
     public static final String FIELD_FETCH_SOURCE_EXCLUDES = "fetchSourceExcludes";
     public static final String FIELD_REALTIME = "realtime";
+    public static final String FIELD_REFRESH = "refresh";
 
     public GetOptions() {
     }
@@ -54,6 +56,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         fetchSourceIncludes = other.getFetchSourceIncludes();
         fetchSourceExcludes = other.getFetchSourceExcludes();
         realtime = other.isRealtime();
+        refresh = other.isRefresh();
     }
 
     public GetOptions(JsonObject json) {
@@ -65,7 +68,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         fetchSourceIncludes = json.getJsonArray(FIELD_FETCH_SOURCE_INCLUDES, new JsonArray()).getList();
         fetchSourceExcludes = json.getJsonArray(FIELD_FETCH_SOURCE_EXCLUDES, new JsonArray()).getList();
         realtime = json.getBoolean(FIELD_REALTIME);
-
+        refresh = json.getBoolean(FIELD_REFRESH);
     }
 
     public String getPreference() {
@@ -126,6 +129,15 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         return this;
     }
 
+    public Boolean isRefresh() {
+        return refresh;
+    }
+
+    public GetOptions setRefresh(Boolean refresh) {
+        this.refresh = refresh;
+        return this;
+    }
+
     @Override
     public JsonObject toJson() {
         JsonObject json = super.toJson();
@@ -136,6 +148,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         if (!getFetchSourceIncludes().isEmpty()) json.put(FIELD_FETCH_SOURCE_INCLUDES, new JsonArray(getFetchSourceIncludes()));
         if (!getFetchSourceExcludes().isEmpty()) json.put(FIELD_FETCH_SOURCE_EXCLUDES, new JsonArray(getFetchSourceExcludes()));
         if (isRealtime() != null) json.put(FIELD_REALTIME, isRealtime());
+        if (isRefresh() != null) json.put(FIELD_REFRESH, isRefresh());
 
         return json;
     }

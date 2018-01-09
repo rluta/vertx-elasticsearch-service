@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.model.BulkItemResponse;
 import com.hubrick.vertx.elasticsearch.model.Hit;
 import com.hubrick.vertx.elasticsearch.model.Hits;
+import com.hubrick.vertx.elasticsearch.model.Retries;
 import com.hubrick.vertx.elasticsearch.model.Shards;
 import com.hubrick.vertx.elasticsearch.model.Suggestion;
 import com.hubrick.vertx.elasticsearch.model.SuggestionEntry;
@@ -60,13 +61,22 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse mapToDeleteByQueryResponse(BulkByScrollResponse esDeleteByQueryResponse) {
         final com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse deleteByQueryResponse = new com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse();
         deleteByQueryResponse.setRawResponse(readResponse(esDeleteByQueryResponse));
-        deleteByQueryResponse.setTook(esDeleteByQueryResponse.getTook().getMillis());
+        deleteByQueryResponse.setTookMillis(esDeleteByQueryResponse.getTook().getMillis());
         deleteByQueryResponse.setTimedOut(esDeleteByQueryResponse.isTimedOut());
         deleteByQueryResponse.setDeleted(esDeleteByQueryResponse.getDeleted());
         deleteByQueryResponse.setBatches(esDeleteByQueryResponse.getBatches());
-        deleteByQueryResponse.setRetries(esDeleteByQueryResponse.getBulkRetries());
-        deleteByQueryResponse.setThrottled(esDeleteByQueryResponse.getStatus().getThrottled().getMillis());
+        deleteByQueryResponse.setRetries(new Retries(esDeleteByQueryResponse.getBulkRetries(), esDeleteByQueryResponse.getSearchRetries()));
+        deleteByQueryResponse.setThrottledMillis(esDeleteByQueryResponse.getStatus().getThrottled().getMillis());
+        deleteByQueryResponse.setRequestsPerSecond(esDeleteByQueryResponse.getStatus().getRequestsPerSecond());
+        deleteByQueryResponse.setThrottledUntilMillis(esDeleteByQueryResponse.getStatus().getThrottledUntil().getMillis());
+        deleteByQueryResponse.setTotal(esDeleteByQueryResponse.getStatus().getTotal());
         deleteByQueryResponse.setVersionConflicts(esDeleteByQueryResponse.getVersionConflicts());
+
+        if (esDeleteByQueryResponse.getSearchFailures() != null) {
+            esDeleteByQueryResponse.getSearchFailures().forEach(failure -> {
+                deleteByQueryResponse.addFailure(new JsonObject(failure.toString()));
+            });
+        }
         if (esDeleteByQueryResponse.getBulkFailures() != null) {
             esDeleteByQueryResponse.getBulkFailures().forEach(failure -> {
                 deleteByQueryResponse.addFailure(new JsonObject(failure.toString()));
@@ -84,7 +94,7 @@ public class ElasticSearchServiceMapper {
         deleteResponse.setType(esDeleteResponse.getType());
         deleteResponse.setId(esDeleteResponse.getId());
         deleteResponse.setVersion(esDeleteResponse.getVersion());
-        deleteResponse.setFound(esDeleteResponse.status().equals(RestStatus.FOUND));
+        deleteResponse.setDeleted(esDeleteResponse.status().equals(RestStatus.OK));
 
         return deleteResponse;
     }
@@ -92,7 +102,7 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.GetResponse mapToUpdateResponse(GetResponse esGetResponse) {
         final com.hubrick.vertx.elasticsearch.model.GetResponse getResponse = new com.hubrick.vertx.elasticsearch.model.GetResponse();
 
-        //getResponse.setRawResponse(readResponse(esGetResponse)); // crashes...
+        //getResponse.setRawResponse(readResponse(esGetResponse)); // FIXME: crashes...
         getResponse.setRawResponse(new JsonObject(esGetResponse.toString()));
         getResponse.setResult(mapToGetResult(esGetResponse));
 

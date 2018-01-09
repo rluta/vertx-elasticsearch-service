@@ -2,7 +2,6 @@
     "elasticsearch": {
         "cluster_name": "elasticsearch",
         "client_transport_sniff": false,
-
         "transportAddresses": [
             {
                 "hostname": "${test.es.hostname}",

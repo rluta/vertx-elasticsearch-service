@@ -25,13 +25,13 @@ public class DeleteResponse extends AbstractResponse<DeleteResponse> {
     private String type;
     private String id;
     private Long version;
-    private Boolean found;
+    private Boolean deleted;
 
     public static final String JSON_FIELD_INDEX = "index";
     public static final String JSON_FIELD_TYPE = "type";
     public static final String JSON_FIELD_ID = "id";
     public static final String JSON_FIELD_VERSION = "version";
-    public static final String JSON_FIELD_FOUND = "found";
+    public static final String JSON_FIELD_DELETED = "deleted";
 
     public DeleteResponse() {
     }
@@ -43,7 +43,7 @@ public class DeleteResponse extends AbstractResponse<DeleteResponse> {
         this.type = other.getType();
         this.id = other.getId();
         this.version = other.getVersion();
-        this.found = other.getFound();
+        this.deleted = other.getDeleted();
     }
 
     public DeleteResponse(JsonObject json) {
@@ -53,7 +53,7 @@ public class DeleteResponse extends AbstractResponse<DeleteResponse> {
         this.type = json.getString(JSON_FIELD_TYPE);
         this.id = json.getString(JSON_FIELD_ID);
         this.version = json.getLong(JSON_FIELD_VERSION);
-        this.found = json.getBoolean(JSON_FIELD_FOUND);
+        this.deleted = json.getBoolean(JSON_FIELD_DELETED);
     }
 
     public String getIndex() {
@@ -88,12 +88,12 @@ public class DeleteResponse extends AbstractResponse<DeleteResponse> {
         this.version = version;
     }
 
-    public Boolean getFound() {
-        return found;
+    public Boolean getDeleted() {
+        return deleted;
     }
 
-    public void setFound(Boolean found) {
-        this.found = found;
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 
     public JsonObject toJson() {
@@ -104,7 +104,7 @@ public class DeleteResponse extends AbstractResponse<DeleteResponse> {
         if (type != null) json.put(JSON_FIELD_TYPE, type);
         if (id != null) json.put(JSON_FIELD_ID, id);
         if (version != null) json.put(JSON_FIELD_VERSION, version);
-        if (found != null) json.put(JSON_FIELD_FOUND, found);
+        if (deleted != null) json.put(JSON_FIELD_DELETED, deleted);
 
         return json.mergeIn(super.toJson());
     }

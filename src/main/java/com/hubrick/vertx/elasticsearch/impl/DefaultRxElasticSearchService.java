@@ -118,9 +118,9 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
     }
 
     @Override
-    public Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, JsonObject query, DeleteByQueryOptions options) {
+    public Observable<DeleteByQueryResponse> deleteByQuery(List<String> indices, DeleteByQueryOptions options) {
         final ObservableFuture<DeleteByQueryResponse> observableFuture = RxHelper.observableFuture();
-        elasticSearchService.deleteByQuery(indices, query, options, observableFuture.toHandler());
+        elasticSearchService.deleteByQuery(indices, options, observableFuture.toHandler());
         return observableFuture;
     }
 }

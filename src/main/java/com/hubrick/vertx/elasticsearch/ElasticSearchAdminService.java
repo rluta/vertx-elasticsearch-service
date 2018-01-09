@@ -15,6 +15,8 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
+import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.MappingOptions;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -24,7 +26,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ProxyHelper;
+import io.vertx.serviceproxy.ServiceProxyBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +39,7 @@ import java.util.List;
 public interface ElasticSearchAdminService {
 
     static ElasticSearchAdminService createEventBusProxy(Vertx vertx, String address) {
-        return ProxyHelper.createProxy(ElasticSearchAdminService.class, vertx, address);
+        return new ServiceProxyBuilder(vertx).setAddress(address).build(ElasticSearchAdminService.class);
     }
 
     @GenIgnore
@@ -60,4 +62,25 @@ public interface ElasticSearchAdminService {
 
     void putMapping(List<String> indices, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
 
+    void createIndex(String index, JsonObject source, CreateIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+
+    @GenIgnore
+    @ProxyIgnore
+    default void deleteIndex(String index, Handler<AsyncResult<JsonObject>> resultHandler) {
+        deleteIndex(Collections.singletonList(index), new DeleteIndexOptions(), resultHandler);
+    }
+
+    @GenIgnore
+    @ProxyIgnore
+    default void deleteIndex(String index, DeleteIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+        deleteIndex(Collections.singletonList(index), options, resultHandler);
+    }
+
+    @GenIgnore
+    @ProxyIgnore
+    default void deleteIndex(List<String> indices, Handler<AsyncResult<JsonObject>> resultHandler) {
+        deleteIndex(indices, new DeleteIndexOptions(), resultHandler);
+    }
+
+    void deleteIndex(List<String> indices, DeleteIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
 }

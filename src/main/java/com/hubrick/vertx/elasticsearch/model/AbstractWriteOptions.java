@@ -17,14 +17,18 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
 
+import java.util.Optional;
+
 /**
  * Abstract options
  */
 public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> extends AbstractOptions<T> {
 
+    private RefreshPolicy refreshPolicy;
     private Integer waitForActiveShard;
     private String timeout;
 
+    public static final String FIELD_REFRESH_POLICY = "refreshPolicy";
     public static final String FIELD_WAIT_FOR_ACTIVE_SHARD = "waitForActiveShard";
     public static final String FIELD_TIMEOUT = "timeout";
 
@@ -33,6 +37,7 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
 
     protected AbstractWriteOptions(T other) {
         super(other);
+        refreshPolicy = other.getRefreshPolicy();
         waitForActiveShard = other.getWaitForActiveShard();
         timeout = other.getTimeout();
     }
@@ -40,11 +45,18 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
     protected AbstractWriteOptions(JsonObject json) {
         super(json);
 
+        refreshPolicy = Optional.ofNullable(json.getString(FIELD_REFRESH_POLICY)).map(RefreshPolicy::valueOf).orElse(null);
         timeout = json.getString(FIELD_TIMEOUT);
+        waitForActiveShard = Optional.ofNullable(json.getString(FIELD_WAIT_FOR_ACTIVE_SHARD)).map(Integer::valueOf).orElse(null);
+    }
 
-        String s = json.getString(FIELD_WAIT_FOR_ACTIVE_SHARD);
-        if (s != null) waitForActiveShard = Integer.valueOf(s);
+    public RefreshPolicy getRefreshPolicy() {
+        return refreshPolicy;
+    }
 
+    public T setRefresh(RefreshPolicy refreshPolicy) {
+        this.refreshPolicy = refreshPolicy;
+        return returnThis();
     }
 
     public Integer getWaitForActiveShard() {
@@ -69,6 +81,7 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
     public JsonObject toJson() {
         JsonObject json = super.toJson();
 
+        if (getRefreshPolicy() != null) json.put(FIELD_REFRESH_POLICY, getRefreshPolicy().name());
         if (getWaitForActiveShard() != null) {
             json.put(FIELD_WAIT_FOR_ACTIVE_SHARD, getWaitForActiveShard().toString());
         }

@@ -39,11 +39,9 @@ public class ElasticSearchBinder extends AbstractBinder {
      */
     @Override
     protected void configure() {
-
         bind(DefaultTransportClientFactory.class).to(TransportClientFactory.class);
         bind(EnvElasticSearchConfigurator.class).to(ElasticSearchConfigurator.class);
         bind(DefaultElasticSearchService.class).to(InternalElasticSearchService.class).to(ElasticSearchService.class).in(Singleton.class);
         bind(DefaultElasticSearchAdminService.class).to(InternalElasticSearchAdminService.class).to(ElasticSearchAdminService.class).in(Singleton.class);
-
     }
 }

@@ -19,18 +19,18 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Options for admin put mapping operations
+ * Options for admin create index operations
  */
 @DataObject
-public class MappingOptions {
+public class CreateIndexOptions {
 
-    public MappingOptions() {
+    public CreateIndexOptions() {
     }
 
-    public MappingOptions(MappingOptions other) {
+    public CreateIndexOptions(CreateIndexOptions other) {
     }
 
-    public MappingOptions(JsonObject json) {
+    public CreateIndexOptions(JsonObject json) {
     }
 
     public JsonObject toJson() {

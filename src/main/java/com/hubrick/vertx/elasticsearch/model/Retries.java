@@ -19,23 +19,51 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Options for admin put mapping operations
+ * @author Emir Dizdarevic
+ * @since 2.0.0
  */
 @DataObject
-public class MappingOptions {
+public class Retries {
 
-    public MappingOptions() {
+    private Long bulk;
+    private Long search;
+
+    public static final String JSON_FIELD_BULK = "bulk";
+    public static final String JSON_FIELD_SEARCH = "search";
+
+    public Retries() {
     }
 
-    public MappingOptions(MappingOptions other) {
+    public Retries(Long bulk, Long search) {
+        this.bulk = bulk;
+        this.search = search;
     }
 
-    public MappingOptions(JsonObject json) {
+    public Retries(Retries other) {
+        this.bulk = other.getBulk();
+        this.search = other.getSearch();
+    }
+
+    public Retries(JsonObject jsonObject) {
+        this.bulk = jsonObject.getLong(JSON_FIELD_BULK);
+        this.search = jsonObject.getLong(JSON_FIELD_SEARCH);
+    }
+
+    public Long getBulk() {
+        return bulk;
+    }
+
+    public Long getSearch() {
+        return search;
     }
 
     public JsonObject toJson() {
+
         final JsonObject json = new JsonObject();
+
+        if (bulk != null) json.put(JSON_FIELD_BULK, bulk);
+        if (search != null) json.put(JSON_FIELD_SEARCH, search);
+
         return json;
     }
-
 }
