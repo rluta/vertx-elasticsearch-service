@@ -16,7 +16,10 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
+import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.MappingOptions;
+import com.hubrick.vertx.elasticsearch.model.TemplateOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ProxyHelper;
@@ -35,18 +38,38 @@ public interface RxElasticSearchAdminService {
         return new DefaultRxElasticSearchAdminService(ProxyHelper.createProxy(ElasticSearchAdminService.class, vertx, address));
     }
 
-    default Observable<JsonObject> putMapping(String index, String type, JsonObject source) {
+    default Observable<Void> putMapping(String index, String type, JsonObject source) {
         return putMapping(Collections.singletonList(index), type, source);
     }
 
-    default Observable<JsonObject> putMapping(String index, String type, JsonObject source, MappingOptions options) {
+    default Observable<Void> putMapping(String index, String type, JsonObject source, MappingOptions options) {
         return putMapping(Collections.singletonList(index), type, source, options);
     }
 
-    default Observable<JsonObject> putMapping(List<String> indices, String type, JsonObject source) {
+    default Observable<Void> putMapping(List<String> indices, String type, JsonObject source) {
         return putMapping(indices, type, source, null);
     }
 
-    Observable<JsonObject> putMapping(List<String> indices, String type, JsonObject source, MappingOptions options);
+    Observable<Void> putMapping(List<String> indices, String type, JsonObject source, MappingOptions options);
+
+    Observable<Void> createIndex(String index, JsonObject source, CreateIndexOptions options);
+
+    default Observable<Void> deleteIndex(String index) {
+        return deleteIndex(Collections.singletonList(index), new DeleteIndexOptions());
+    }
+
+    default Observable<Void> deleteIndex(String index, DeleteIndexOptions options) {
+        return deleteIndex(Collections.singletonList(index), options);
+    }
+
+    default Observable<Void> deleteIndex(List<String> indices) {
+        return deleteIndex(indices, new DeleteIndexOptions());
+    }
+
+    Observable<Void> deleteIndex(List<String> indices, DeleteIndexOptions options);
+
+    Observable<Void> putTemplate(String name, JsonObject source, TemplateOptions options);
+
+    Observable<Void> deleteTemplate(String name, TemplateOptions options);
 
 }

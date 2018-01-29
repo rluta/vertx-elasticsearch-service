@@ -8,6 +8,4 @@ env:
   bootstrap.memory_lock: true
   cluster.name: elasticsearch
 
-healthChecks:
-  logPatterns:
-    - pattern: started
+sleep: 30000

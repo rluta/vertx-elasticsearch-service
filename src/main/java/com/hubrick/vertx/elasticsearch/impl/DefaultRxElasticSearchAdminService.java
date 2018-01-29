@@ -16,8 +16,11 @@
 package com.hubrick.vertx.elasticsearch.impl;
 
 import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
+import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
+import com.hubrick.vertx.elasticsearch.model.DeleteIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.MappingOptions;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchAdminService;
+import com.hubrick.vertx.elasticsearch.model.TemplateOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rx.java.ObservableFuture;
 import io.vertx.rx.java.RxHelper;
@@ -42,9 +45,37 @@ public class DefaultRxElasticSearchAdminService implements RxElasticSearchAdminS
     }
 
     @Override
-    public Observable<JsonObject> putMapping(List<String> indices, String type, JsonObject source, MappingOptions options) {
-        final ObservableFuture<JsonObject> observableFuture = RxHelper.observableFuture();
+    public Observable<Void> putMapping(List<String> indices, String type, JsonObject source, MappingOptions options) {
+        final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
         elasticSearchAdminService.putMapping(indices, type, source, options, observableFuture.toHandler());
+        return observableFuture;
+    }
+
+    @Override
+    public Observable<Void> createIndex(String index, JsonObject source, CreateIndexOptions options) {
+        final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+        elasticSearchAdminService.createIndex(index, source, options, observableFuture.toHandler());
+        return observableFuture;
+    }
+
+    @Override
+    public Observable<Void> deleteIndex(List<String> indices, DeleteIndexOptions options) {
+        final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+        elasticSearchAdminService.deleteIndex(indices, options, observableFuture.toHandler());
+        return observableFuture;
+    }
+
+    @Override
+    public Observable<Void> putTemplate(String name, JsonObject source, TemplateOptions options) {
+        final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+        elasticSearchAdminService.putTemplate(name, source, options, observableFuture.toHandler());
+        return observableFuture;
+    }
+
+    @Override
+    public Observable<Void> deleteTemplate(String name, TemplateOptions options) {
+        final ObservableFuture<Void> observableFuture = RxHelper.observableFuture();
+        elasticSearchAdminService.deleteTemplate(name, options, observableFuture.toHandler());
         return observableFuture;
     }
 }

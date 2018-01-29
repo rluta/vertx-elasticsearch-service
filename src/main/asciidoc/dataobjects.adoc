@@ -648,6 +648,20 @@
 |[[text]]`text`|`String`|-
 |===
 
+[[TemplateOptions]]
+== TemplateOptions
+
+++++
+ Options for admin put template operations
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|===
+
 [[UpdateOptions]]
 == UpdateOptions
 

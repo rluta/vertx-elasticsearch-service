@@ -15,12 +15,14 @@
  */
 package com.hubrick.vertx.elasticsearch.impl;
 
+import com.google.common.base.Charsets;
 import com.hubrick.vertx.elasticsearch.ElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.internal.InternalElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.internal.InternalElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.MappingOptions;
+import com.hubrick.vertx.elasticsearch.model.TemplateOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -35,6 +37,12 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingAction;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateAction;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateResponse;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateAction;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.xcontent.XContentType;
 
@@ -54,7 +62,7 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
     }
 
     @Override
-    public void putMapping(List<String> indices, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void putMapping(List<String> indices, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<Void>> resultHandler) {
 
         final PutMappingRequestBuilder builder = PutMappingAction.INSTANCE.newRequestBuilder(service.getClient())
                 .setIndices(indices.toArray(new String[indices.size()]))
@@ -64,9 +72,7 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
         builder.execute(new ActionListener<PutMappingResponse>() {
             @Override
             public void onResponse(PutMappingResponse putMappingResponse) {
-                JsonObject json = new JsonObject()
-                        .put("acknowledged", putMappingResponse.isAcknowledged());
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture());
             }
 
             @Override
@@ -77,7 +83,7 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
     }
 
     @Override
-    public void createIndex(String index, JsonObject source, CreateIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void createIndex(String index, JsonObject source, CreateIndexOptions options, Handler<AsyncResult<Void>> resultHandler) {
 
         final CreateIndexRequestBuilder builder = CreateIndexAction.INSTANCE.newRequestBuilder(service.getClient())
                 .setIndex(index)
@@ -86,8 +92,7 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
         builder.execute(new ActionListener<CreateIndexResponse>() {
             @Override
             public void onResponse(CreateIndexResponse createIndexResponse) {
-                final JsonObject json = new JsonObject().put("acknowledged", createIndexResponse.isAcknowledged());
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture());
             }
 
             @Override
@@ -98,14 +103,52 @@ public class DefaultElasticSearchAdminService implements InternalElasticSearchAd
     }
 
     @Override
-    public void deleteIndex(List<String> indices, DeleteIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void deleteIndex(List<String> indices, DeleteIndexOptions options, Handler<AsyncResult<Void>> resultHandler) {
         final DeleteIndexRequestBuilder builder = new DeleteIndexRequestBuilder(service.getClient(), DeleteIndexAction.INSTANCE, indices.toArray(new String[0]));
 
         builder.execute(new ActionListener<DeleteIndexResponse>() {
             @Override
             public void onResponse(DeleteIndexResponse deleteIndexResponse) {
-                final JsonObject json = new JsonObject().put("acknowledged", deleteIndexResponse.isAcknowledged());
-                resultHandler.handle(Future.succeededFuture(json));
+                resultHandler.handle(Future.succeededFuture());
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                resultHandler.handle(Future.failedFuture(e));
+            }
+        });
+    }
+
+    @Override
+    public void putTemplate(String name, JsonObject source, TemplateOptions options, Handler<AsyncResult<Void>> resultHandler) {
+
+        final PutIndexTemplateRequestBuilder builder = new PutIndexTemplateRequestBuilder(service.getClient(), PutIndexTemplateAction.INSTANCE, name)
+                .setSource(source.encode().getBytes(Charsets.UTF_8), XContentType.JSON);
+
+        builder.execute(new ActionListener<PutIndexTemplateResponse>() {
+            @Override
+            public void onResponse(PutIndexTemplateResponse putIndexTemplateResponse) {
+                resultHandler.handle(Future.succeededFuture());
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                resultHandler.handle(Future.failedFuture(e));
+            }
+        });
+    }
+
+    @Override
+    public void deleteTemplate(String name, TemplateOptions options, Handler<AsyncResult<Void>> resultHandler) {
+
+        final DeleteIndexTemplateRequestBuilder builder = DeleteIndexTemplateAction.INSTANCE.newRequestBuilder(service.getClient()).setName(name);
+
+        builder.execute(new ActionListener<DeleteIndexTemplateResponse>() {
+            @Override
+            public void onResponse(DeleteIndexTemplateResponse deleteIndexTemplateResponse) {
+                JsonObject json = new JsonObject()
+                        .put("acknowledged", deleteIndexTemplateResponse.isAcknowledged());
+                resultHandler.handle(Future.succeededFuture());
             }
 
             @Override
