@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author sp@hubrick.com
@@ -61,5 +62,10 @@ public class BulkItemResponse {
         if (shards != null) json.put(JSON_FIELD_SHARDS, shards.toJson());
 
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

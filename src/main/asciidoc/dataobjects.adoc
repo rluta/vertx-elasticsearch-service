@@ -167,6 +167,7 @@
 |[[sorts]]`sorts`|`Array of link:dataobjects.html#BaseSortOption[BaseSortOption]`|-
 |[[sourceExcludes]]`sourceExcludes`|`Array of String`|-
 |[[sourceIncludes]]`sourceIncludes`|`Array of String`|-
+|[[storedFields]]`storedFields`|`Array of String`|-
 |[[terminateAfter]]`terminateAfter`|`Number (Integer)`|-
 |[[timeoutInMillis]]`timeoutInMillis`|`Number (Long)`|-
 |[[trackScores]]`trackScores`|`Boolean`|-
@@ -505,6 +506,7 @@
 |[[sorts]]`sorts`|`Array of link:dataobjects.html#BaseSortOption[BaseSortOption]`|-
 |[[sourceExcludes]]`sourceExcludes`|`Array of String`|-
 |[[sourceIncludes]]`sourceIncludes`|`Array of String`|-
+|[[storedFields]]`storedFields`|`Array of String`|-
 |[[terminateAfter]]`terminateAfter`|`Number (Integer)`|-
 |[[timeoutInMillis]]`timeoutInMillis`|`Number (Long)`|-
 |[[trackScores]]`trackScores`|`Boolean`|-

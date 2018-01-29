@@ -32,7 +32,7 @@ public class ScriptSortOption extends BaseSortOption {
     private String script;
     private Type type;
     private String lang;
-    private JsonObject params;
+    private JsonObject params = new JsonObject();
 
     public static final String JSON_FIELD_SCRIPT = "script";
     public static final String JSON_FIELD_LANG = "lang";

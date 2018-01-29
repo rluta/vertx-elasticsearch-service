@@ -17,6 +17,7 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 /**
@@ -105,5 +106,10 @@ public abstract class BaseSortOption {
     public enum SortType {
         FIELD,
         SCRIPT
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

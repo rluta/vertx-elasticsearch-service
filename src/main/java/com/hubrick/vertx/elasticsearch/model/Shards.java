@@ -17,6 +17,7 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Emir Dizdarevic
@@ -83,5 +84,10 @@ public class Shards {
         if (failed != null) json.put(JSON_FIELD_FAILED, failed);
 
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.ElasticSearchConfigurator;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.TransportClientFactory;
@@ -62,15 +63,61 @@ import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.BoostingQueryBuilder;
+import org.elasticsearch.index.query.CommonTermsQueryBuilder;
+import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
+import org.elasticsearch.index.query.DisMaxQueryBuilder;
+import org.elasticsearch.index.query.ExistsQueryBuilder;
+import org.elasticsearch.index.query.FieldMaskingSpanQueryBuilder;
+import org.elasticsearch.index.query.FuzzyQueryBuilder;
+import org.elasticsearch.index.query.GeoBoundingBoxQueryBuilder;
+import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
+import org.elasticsearch.index.query.GeoPolygonQueryBuilder;
+import org.elasticsearch.index.query.GeoShapeQueryBuilder;
+import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.PrefixQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.ScriptQueryBuilder;
+import org.elasticsearch.index.query.SimpleQueryStringBuilder;
+import org.elasticsearch.index.query.SpanContainingQueryBuilder;
+import org.elasticsearch.index.query.SpanFirstQueryBuilder;
+import org.elasticsearch.index.query.SpanMultiTermQueryBuilder;
+import org.elasticsearch.index.query.SpanNearQueryBuilder;
+import org.elasticsearch.index.query.SpanNotQueryBuilder;
+import org.elasticsearch.index.query.SpanOrQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
+import org.elasticsearch.index.query.SpanWithinQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
+import org.elasticsearch.index.query.TermsSetQueryBuilder;
+import org.elasticsearch.index.query.TypeQueryBuilder;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.join.query.HasChildQueryBuilder;
+import org.elasticsearch.join.query.HasParentQueryBuilder;
+import org.elasticsearch.join.query.ParentIdQueryBuilder;
+import org.elasticsearch.percolator.PercolateQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -118,13 +165,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToBulkIndexResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteByQueryResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToIndexResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSearchResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSuggestResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToUpdateResponse;
-import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToBulkIndexResponse;
 
 /**
  * Default implementation of {@link ElasticSearchService}
@@ -136,7 +183,69 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     private final ElasticSearchConfigurator configurator;
     protected TransportClient client;
 
-    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+    private static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+    private static final NamedXContentRegistry DEFAULT_NAMED_X_CONTEXT_REGISTRY = new NamedXContentRegistry(
+            ImmutableList.<NamedXContentRegistry.Entry>builder()
+                    // Full text queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match_all"), MatchAllQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match"), MatchQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match_phrase"), MatchPhraseQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match_phrase_prefix"), MatchPhrasePrefixQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("multi_match"), MultiMatchQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("common"), CommonTermsQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("query_string"), QueryStringQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("simple_query_string"), SimpleQueryStringBuilder::fromXContent))
+
+                    // Term level queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("term"), TermQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("terms"), TermsQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("terms_set"), TermsSetQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("range"), RangeQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("exists"), ExistsQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("prefix"), PrefixQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("wildcard"), WildcardQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("regexp"), RegexpQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("fuzzy"), FuzzyQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("type"), TypeQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("ids"), IdsQueryBuilder::fromXContent))
+
+                    // Compound queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("constant_score"), ConstantScoreQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("bool"), BoolQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("dis_max"), DisMaxQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("function_score"), FunctionScoreQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("boosting"), BoostingQueryBuilder::fromXContent))
+
+                    // Joining queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("nested"), NestedQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("has_child"), HasChildQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("has_parent"), HasParentQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("parent_id"), ParentIdQueryBuilder::fromXContent))
+
+                    // Geo queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_shape"), GeoShapeQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_bounding_box"), GeoBoundingBoxQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_distance"), GeoDistanceQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_polygon"), GeoPolygonQueryBuilder::fromXContent))
+
+                    // Specialized queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("more_like_this"), MoreLikeThisQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("script"), ScriptQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("percolate"), PercolateQueryBuilder::fromXContent))
+
+                    // Span queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_term"), SpanTermQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_multi"), SpanMultiTermQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_first"), SpanFirstQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_near"), SpanNearQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_or"), SpanOrQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_not"), SpanNotQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_containing"), SpanContainingQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_within"), SpanWithinQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("field_masking_span"), FieldMaskingSpanQueryBuilder::fromXContent))
+
+                    .build()
+    );
 
     @Inject
     public DefaultElasticSearchService(TransportClientFactory clientFactory, ElasticSearchConfigurator configurator) {
@@ -200,13 +309,15 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         final BulkRequestBuilder builder = client.prepareBulk();
 
         if (options != null) {
-            if (options.getWaitForActiveShard() != null) builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getRefreshPolicy() != null) builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
             if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
         }
 
         for (final JsonObject source : sources) {
-            builder.add(client.prepareIndex(index,type).setSource(convertJsonObjectToMap(source)));
+            builder.add(client.prepareIndex(index, type).setSource(convertJsonObjectToMap(source)));
         }
 
         builder.execute(new ActionListener<BulkResponse>() {
@@ -239,8 +350,8 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
 
             if (options.getRetryOnConflict() != null) builder.setRetryOnConflict(options.getRetryOnConflict());
-            if (options.getDoc() != null) builder.setDoc(options.getDoc().encode());
-            if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode());
+            if (options.getDoc() != null) builder.setDoc(options.getDoc().encode(), XContentType.JSON);
+            if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode(), XContentType.JSON);
             if (options.isDocAsUpsert() != null) builder.setDocAsUpsert(options.isDocAsUpsert());
             if (options.isDetectNoop() != null) builder.setDetectNoop(options.isDetectNoop());
             if (options.isScriptedUpsert() != null) builder.setScriptedUpsert(options.isScriptedUpsert());
@@ -363,8 +474,10 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         if (options != null) {
             if (options.getRouting() != null) builder.setRouting(options.getRouting());
             if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getRefreshPolicy() != null) builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getWaitForActiveShard() != null) builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
             if (options.getVersion() != null) builder.setVersion(options.getVersion());
             if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
             if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
@@ -465,7 +578,8 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         }
         if (options.getSearchType() != null) builder.setSearchType(options.getSearchType());
         if (options.getScroll() != null) builder.setScroll(options.getScroll());
-        if (options.getTimeoutInMillis() != null) builder.setTimeout(TimeValue.timeValueMillis(options.getTimeoutInMillis()));
+        if (options.getTimeoutInMillis() != null)
+            builder.setTimeout(TimeValue.timeValueMillis(options.getTimeoutInMillis()));
         if (options.getTerminateAfter() != null) builder.setTerminateAfter(options.getTerminateAfter());
         if (options.getRouting() != null) builder.setRouting(options.getRouting());
         if (options.getPreference() != null) builder.setPreference(options.getPreference());
@@ -479,6 +593,9 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         if (options.isVersion() != null) builder.setVersion(options.isVersion());
         if (options.isFetchSource() != null) builder.setFetchSource(options.isFetchSource());
         if (options.isTrackScores() != null) builder.setTrackScores(options.isTrackScores());
+        if (!options.getStoredFields().isEmpty()) {
+            builder.storedFields((String[]) options.getStoredFields().toArray(new String[options.getTypes().size()]));
+        }
 
         if (!options.getSourceIncludes().isEmpty() || !options.getSourceExcludes().isEmpty()) {
             builder.setFetchSource(
@@ -564,13 +681,18 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
 
     /**
      * Convert recursively an AggregationOption in AggregationBuilder
+     *
      * @param aggregationOption the aggregation option to parse
      * @return the created aggregation builder if everything has been parsed correctly
      */
     private AggregationBuilder parseAggregation(AggregationOption aggregationOption) {
         try {
-            AggregationBuilder result = null;
-            XContentParser context = XContentType.JSON.xContent().createParser(NamedXContentRegistry.EMPTY, aggregationOption.getDefinition().encode());
+            final XContentParser context = XContentType.JSON.xContent().createParser(DEFAULT_NAMED_X_CONTEXT_REGISTRY, aggregationOption.getDefinition().encode());
+
+            // Skip START_OBJECT. The aggregation builders don't like it
+            context.nextToken();
+
+            final AggregationBuilder result;
             switch (aggregationOption.getType()) {
                 case TERMS:
                     result = TermsAggregationBuilder.parse(aggregationOption.getName(), context);

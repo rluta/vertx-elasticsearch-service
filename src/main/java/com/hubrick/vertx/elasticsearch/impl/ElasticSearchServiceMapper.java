@@ -102,8 +102,7 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.GetResponse mapToUpdateResponse(GetResponse esGetResponse) {
         final com.hubrick.vertx.elasticsearch.model.GetResponse getResponse = new com.hubrick.vertx.elasticsearch.model.GetResponse();
 
-        //getResponse.setRawResponse(readResponse(esGetResponse)); // FIXME: crashes...
-        getResponse.setRawResponse(new JsonObject(esGetResponse.toString()));
+        getResponse.setRawResponse(readResponse(esGetResponse));
         getResponse.setResult(mapToGetResult(esGetResponse));
 
         return getResponse;
@@ -369,10 +368,14 @@ public class ElasticSearchServiceMapper {
 
     protected static JsonObject readResponse(ToXContent toXContent) {
         try {
-            XContentBuilder builder = XContentFactory.jsonBuilder();
-            builder.startObject();
-            toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
-            builder.endObject();
+            final XContentBuilder builder = XContentFactory.jsonBuilder();
+            if(toXContent.isFragment()) {
+                builder.startObject();
+                toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
+                builder.endObject();
+            } else {
+                toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
+            }
 
             return new JsonObject(builder.string());
 

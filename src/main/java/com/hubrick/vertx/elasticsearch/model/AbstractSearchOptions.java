@@ -18,6 +18,7 @@ package com.hubrick.vertx.elasticsearch.model;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.sort.SortOrder;
 
@@ -52,6 +53,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     private List<AggregationOption> aggregations = new ArrayList<>();
     private List<BaseSortOption> sorts = new ArrayList<>();
     private Map<String, ScriptFieldOption> scriptFields = new HashMap<>();
+    private List<String> storedFields = new ArrayList<>();
 
     public static final String JSON_FIELD_TYPES = "types";
     public static final String JSON_FIELD_SEARCH_TYPE = "searchType";
@@ -74,6 +76,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     public static final String JSON_FIELD_AGGREGATIONS = "aggregations";
     public static final String JSON_FIELD_SORTS = "sorts";
     public static final String JSON_FIELD_SCRIPT_FIELDS = "scriptFields";
+    public static final String JSON_FIELD_STORED_FIELDS = "storedFields";
 
     public AbstractSearchOptions() {
     }
@@ -100,6 +103,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         aggregations = other.getAggregations();
         sorts = other.getSorts();
         scriptFields = other.getScriptFields();
+        scriptFields = other.getScriptFields();
     }
 
     public AbstractSearchOptions(JsonObject json) {
@@ -121,6 +125,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         sourceIncludes = json.getJsonArray(JSON_FIELD_SOURCE_INCLUDES, new JsonArray()).getList();
         sourceExcludes = json.getJsonArray(JSON_FIELD_SOURCE_EXCLUDES, new JsonArray()).getList();
         trackScores = json.getBoolean(JSON_FIELD_TRACK_SCORES);
+        storedFields = json.getJsonArray(JSON_FIELD_STORED_FIELDS, new JsonArray()).getList();
 
         JsonArray aggregationsJson = json.getJsonArray(JSON_FIELD_AGGREGATIONS);
         if (aggregationsJson != null) {
@@ -367,6 +372,23 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         return returnThis();
     }
 
+    public List<String> getStoredFields() {
+        return storedFields;
+    }
+
+    public void setStoredFields(List<String> storedFields) {
+        this.storedFields = storedFields;
+    }
+
+    @GenIgnore
+    public T addStoredField(String storedField) {
+        if (this.storedFields == null) {
+            this.storedFields = new ArrayList<>();
+        }
+        this.storedFields.add(storedField);
+        return returnThis();
+    }
+
     public JsonObject toJson() {
 
         JsonObject json = new JsonObject();
@@ -390,6 +412,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         if (!sourceExcludes.isEmpty()) json.put(JSON_FIELD_SOURCE_EXCLUDES, new JsonArray(sourceExcludes));
         if (trackScores != null) json.put(JSON_FIELD_TRACK_SCORES, trackScores);
         if (explain != null) json.put(JSON_FIELD_EXPLAIN, explain);
+        if (!storedFields.isEmpty()) json.put(JSON_FIELD_STORED_FIELDS, new JsonArray(storedFields));
 
         if (aggregations != null && !aggregations.isEmpty()) {
             JsonArray aggregationArray = new JsonArray();
@@ -419,5 +442,10 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     @SuppressWarnings("unchecked")
     protected T returnThis() {
         return (T) this;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }
