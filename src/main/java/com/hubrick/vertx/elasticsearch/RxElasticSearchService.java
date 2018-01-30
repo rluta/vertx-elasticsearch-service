@@ -16,8 +16,11 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
-import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkDeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkUpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -57,8 +60,6 @@ public interface RxElasticSearchService {
     }
 
     Observable<IndexResponse> index(String index, String type, JsonObject source, IndexOptions options);
-
-    Observable<BulkIndexResponse> bulkIndex(String index, String type, List<JsonObject> sources, BulkOptions options);
 
     Observable<UpdateResponse> update(String index, String type, String id, UpdateOptions options);
 
@@ -107,6 +108,24 @@ public interface RxElasticSearchService {
     }
 
     Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options);
+
+    default Observable<BulkResponse> bulkIndex(final List<BulkIndexOptions> bulkIndexOptions, BulkOptions options) {
+        return bulk(bulkIndexOptions, Collections.emptyList(), Collections.emptyList(), options);
+    }
+
+    default Observable<BulkResponse> bulkUpdate(final List<BulkUpdateOptions> bulkUpdateOptions, BulkOptions options) {
+        return bulk(Collections.emptyList(), bulkUpdateOptions, Collections.emptyList(), options);
+    }
+
+    default Observable<BulkResponse> bulkDelete(final List<BulkDeleteOptions> bulkDeleteOptions, BulkOptions options) {
+        return bulk(Collections.emptyList(), Collections.emptyList(), bulkDeleteOptions, options);
+    }
+
+    Observable<BulkResponse> bulk(final List<BulkIndexOptions> indexOptions,
+                                  final List<BulkUpdateOptions> updateOptions,
+                                  final List<BulkDeleteOptions> deleteOptions,
+                                  final BulkOptions bulkOptions);
+
 
     default Observable<DeleteByQueryResponse> deleteByQuery(String index, DeleteByQueryOptions options) {
         return deleteByQuery(Collections.singletonList(index), options);

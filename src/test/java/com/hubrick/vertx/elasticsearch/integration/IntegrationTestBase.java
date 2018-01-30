@@ -24,12 +24,14 @@ import com.hubrick.vertx.elasticsearch.RxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchAdminService;
 import com.hubrick.vertx.elasticsearch.impl.DefaultRxElasticSearchService;
+import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
@@ -60,6 +62,7 @@ import java.util.stream.Collectors;
 
 import static com.hubrick.vertx.elasticsearch.VertxMatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -351,28 +354,37 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
 
         final Async async = testContext.async();
         final JsonObject source1 = new JsonObject()
-            .put("user", source_user)
-            .put("message", source_message)
-            .put("obj", new JsonObject()
-                .put("array", new JsonArray()
-                    .add("1")
-                    .add("2")));
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
 
         final JsonObject source2 = new JsonObject()
-            .put("user", source_user)
-            .put("message", source_message)
-            .put("obj", new JsonObject()
-                .put("array", new JsonArray()
-                    .add("1")
-                    .add("2")));
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
 
         final BulkOptions options = new BulkOptions();
-        rxService.bulkIndex(index, type, ImmutableList.of(source1, source2), options)
-            .subscribe(
+        rxService.bulkIndex(
+                ImmutableList.of(
+                        new BulkIndexOptions().setIndex(index).setType(type).setSource(source1).setIndexOptions(new IndexOptions().setId("1")),
+                        new BulkIndexOptions().setIndex(index).setType(type).setSource(source2).setIndexOptions(new IndexOptions().setId("2"))
+                ),
+                options
+        ).subscribe(
                 bulkIndexResponse -> {
                     assertThat(testContext, bulkIndexResponse.getResponses().size(), is(2));
-                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getId()).filter(e -> e != null).collect(Collectors.toList()), hasSize(2));
-                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getShards()).filter(e -> e != null).collect(Collectors.toList()), hasSize(2));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getId()).collect(Collectors.toList()), containsInAnyOrder("1", "2"));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getShards()).collect(Collectors.toList()), hasSize(2));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getIndex()).collect(Collectors.toList()), containsInAnyOrder(index, index));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getType()).collect(Collectors.toList()), containsInAnyOrder(type, type));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getOpType()).collect(Collectors.toList()), containsInAnyOrder(OpType.INDEX, OpType.INDEX));
+                    assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getFailure()).collect(Collectors.toList()), containsInAnyOrder(new JsonObject(), new JsonObject()));
 
                     assertThat(testContext, bulkIndexResponse.getTookInMillis(), greaterThanOrEqualTo(0l));
 
@@ -380,7 +392,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                     vertx.setTimer(1000, id -> async.complete());
                 },
                 error -> testContext.fail(error)
-            );
+        );
     }
 
     @Test

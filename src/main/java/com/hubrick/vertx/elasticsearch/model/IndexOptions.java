@@ -17,7 +17,8 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.action.index.IndexRequest;
+
+import java.util.Optional;
 
 /**
  * Index operation options
@@ -26,7 +27,7 @@ import org.elasticsearch.action.index.IndexRequest;
 public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
 
     private String id;
-    private IndexRequest.OpType opType;
+    private OpType opType;
 
     public static final String FIELD_ID = "id";
     public static final String FIELD_OP_TYPE = "opType";
@@ -46,9 +47,7 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
         super(json);
 
         id = json.getString(FIELD_ID);
-
-        String s = json.getString(FIELD_OP_TYPE);
-        if (s != null) opType = IndexRequest.OpType.fromString(s);
+        opType = Optional.ofNullable(json.getString(FIELD_OP_TYPE)).map(OpType::valueOf).orElse(null);
     }
 
     public String getId() {
@@ -60,11 +59,11 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
         return this;
     }
 
-    public IndexRequest.OpType getOpType() {
+    public OpType getOpType() {
         return opType;
     }
 
-    public IndexOptions setOpType(IndexRequest.OpType opType) {
+    public IndexOptions setOpType(OpType opType) {
         this.opType = opType;
         return this;
     }
@@ -74,7 +73,7 @@ public class IndexOptions extends AbstractWriteOptions<IndexOptions> {
         JsonObject json = super.toJson();
 
         if (getId() != null) json.put(FIELD_ID, getId());
-        if (getOpType() != null) json.put(FIELD_OP_TYPE, getOpType().toString().toLowerCase());
+        if (getOpType() != null) json.put(FIELD_OP_TYPE, getOpType().name());
 
         return json;
     }

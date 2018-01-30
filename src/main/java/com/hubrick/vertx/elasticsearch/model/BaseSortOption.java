@@ -15,7 +15,6 @@
  */
 package com.hubrick.vertx.elasticsearch.model;
 
-import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -26,7 +25,6 @@ import org.elasticsearch.search.sort.SortOrder;
  * @author Emir Dizdarevic
  * @since 1.0.0
  */
-@DataObject
 public abstract class BaseSortOption {
 
     private SortType sortType;

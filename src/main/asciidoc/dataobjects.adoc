@@ -37,24 +37,8 @@
 |[[type]]`type`|`link:enums.html#AggregationType[AggregationType]`|-
 |===
 
-[[BaseSortOption]]
-== BaseSortOption
-
-++++
- Sort option
-++++
-'''
-
-[cols=">25%,^25%,50%"]
-[frame="topbot"]
-|===
-^|Name | Type ^| Description
-|[[order]]`order`|`link:enums.html#SortOrder[SortOrder]`|-
-|[[sortType]]`sortType`|`link:enums.html#SortType[SortType]`|-
-|===
-
-[[BaseSuggestOption]]
-== BaseSuggestOption
+[[BulkDeleteOptions]]
+== BulkDeleteOptions
 
 ++++
 ++++
@@ -64,11 +48,15 @@
 [frame="topbot"]
 |===
 ^|Name | Type ^| Description
-|[[suggestionType]]`suggestionType`|`link:enums.html#SuggestionType[SuggestionType]`|-
+|[[deleteOptions]]`deleteOptions`|`link:dataobjects.html#DeleteOptions[DeleteOptions]`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[source]]`source`|`String`|-
+|[[type]]`type`|`String`|-
 |===
 
-[[BulkIndexResponse]]
-== BulkIndexResponse
+[[BulkIndexOptions]]
+== BulkIndexOptions
 
 ++++
 ++++
@@ -78,8 +66,10 @@
 [frame="topbot"]
 |===
 ^|Name | Type ^| Description
-|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
-|[[tookInMillis]]`tookInMillis`|`Number (Long)`|-
+|[[index]]`index`|`String`|-
+|[[indexOptions]]`indexOptions`|`link:dataobjects.html#IndexOptions[IndexOptions]`|-
+|[[source]]`source`|`Json object`|-
+|[[type]]`type`|`String`|-
 |===
 
 [[BulkOptions]]
@@ -102,6 +92,60 @@
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
 |[[waitForActiveShard]]`waitForActiveShard`|`Number (Integer)`|-
+|===
+
+[[BulkResponse]]
+== BulkResponse
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[responses]]`responses`|`Array of link:dataobjects.html#BulkResponseItem[BulkResponseItem]`|-
+|[[tookInMillis]]`tookInMillis`|`Number (Long)`|-
+|===
+
+[[BulkResponseItem]]
+== BulkResponseItem
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[failure]]`failure`|`Json object`|-
+|[[failureMessage]]`failureMessage`|`String`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[opType]]`opType`|`link:enums.html#OpType[OpType]`|-
+|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
+|[[type]]`type`|`String`|-
+|===
+
+[[BulkUpdateOptions]]
+== BulkUpdateOptions
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[source]]`source`|`String`|-
+|[[type]]`type`|`String`|-
+|[[updateOptions]]`updateOptions`|`link:dataobjects.html#UpdateOptions[UpdateOptions]`|-
 |===
 
 [[CompletionSuggestOption]]
@@ -164,7 +208,6 @@
 |[[searchType]]`searchType`|`link:enums.html#SearchType[SearchType]`|-
 |[[size]]`size`|`Number (Integer)`|-
 |[[slices]]`slices`|`Number (Integer)`|-
-|[[sorts]]`sorts`|`Array of link:dataobjects.html#BaseSortOption[BaseSortOption]`|-
 |[[sourceExcludes]]`sourceExcludes`|`Array of String`|-
 |[[sourceIncludes]]`sourceIncludes`|`Array of String`|-
 |[[storedFields]]`storedFields`|`Array of String`|-
@@ -503,7 +546,6 @@
 |[[scroll]]`scroll`|`String`|-
 |[[searchType]]`searchType`|`link:enums.html#SearchType[SearchType]`|-
 |[[size]]`size`|`Number (Integer)`|-
-|[[sorts]]`sorts`|`Array of link:dataobjects.html#BaseSortOption[BaseSortOption]`|-
 |[[sourceExcludes]]`sourceExcludes`|`Array of String`|-
 |[[sourceIncludes]]`sourceIncludes`|`Array of String`|-
 |[[storedFields]]`storedFields`|`Array of String`|-
@@ -580,7 +622,6 @@
 ^|Name | Type ^| Description
 |[[parent]]`parent`|`String`|-
 |[[routing]]`routing`|`String`|-
-|[[suggestions]]`suggestions`|`link:dataobjects.html#BaseSuggestOption[BaseSuggestOption]`|-
 |[[version]]`version`|`Number (Long)`|-
 |[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
 |===

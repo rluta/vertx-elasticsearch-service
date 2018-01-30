@@ -24,7 +24,10 @@ import com.hubrick.vertx.elasticsearch.model.AbstractSearchOptions;
 import com.hubrick.vertx.elasticsearch.model.AggregationOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSortOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.BulkDeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkUpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.Conflicts;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
@@ -47,6 +50,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
@@ -275,20 +279,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     public void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.IndexResponse>> resultHandler) {
 
         final IndexRequestBuilder builder = client.prepareIndex(index, type).setSource(source.encode(), XContentType.JSON);
-
-        if (options != null) {
-            if (options.getId() != null) builder.setId(options.getId());
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getOpType() != null) builder.setOpType(options.getOpType());
-            if (options.getWaitForActiveShard() != null)
-                builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getRefreshPolicy() != null)
-                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-        }
+        populateIndexRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<IndexResponse>() {
             @Override
@@ -305,69 +296,10 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void bulkIndex(final String index, final String type, final List<JsonObject> sources, final BulkOptions options, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkIndexResponse>> resultHandler) {
-        final BulkRequestBuilder builder = client.prepareBulk();
-
-        if (options != null) {
-            if (options.getWaitForActiveShard() != null)
-                builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getRefreshPolicy() != null)
-                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-        }
-
-        for (final JsonObject source : sources) {
-            builder.add(client.prepareIndex(index, type).setSource(convertJsonObjectToMap(source)));
-        }
-
-        builder.execute(new ActionListener<BulkResponse>() {
-            @Override
-            public void onResponse(final BulkResponse bulkItemResponses) {
-                resultHandler.handle(Future.succeededFuture(mapToBulkIndexResponse(bulkItemResponses)));
-            }
-
-            @Override
-            public void onFailure(final Exception e) {
-                handleFailure(resultHandler, e);
-            }
-        });
-    }
-
-    @Override
     public void update(String index, String type, String id, UpdateOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.UpdateResponse>> resultHandler) {
 
-        UpdateRequestBuilder builder = client.prepareUpdate(index, type, id);
-
-        if (options != null) {
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getRefreshPolicy() != null)
-                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getWaitForActiveShard() != null)
-                builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-
-            if (options.getRetryOnConflict() != null) builder.setRetryOnConflict(options.getRetryOnConflict());
-            if (options.getDoc() != null) builder.setDoc(options.getDoc().encode(), XContentType.JSON);
-            if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode(), XContentType.JSON);
-            if (options.isDocAsUpsert() != null) builder.setDocAsUpsert(options.isDocAsUpsert());
-            if (options.isDetectNoop() != null) builder.setDetectNoop(options.isDetectNoop());
-            if (options.isScriptedUpsert() != null) builder.setScriptedUpsert(options.isScriptedUpsert());
-
-            if (options.getScript() != null) {
-                if (options.getScriptType() != null) {
-                    Map<String, Object> params = (options.getScriptParams() == null ? null : convertJsonObjectToMap(options.getScriptParams()));
-                    builder.setScript(new Script(options.getScriptType(), options.getScriptLang(), options.getScript(), params));
-                } else {
-                    builder.setScript(new Script(options.getScript()));
-                }
-            }
-            if (!options.getFields().isEmpty()) {
-                builder.setFields(options.getFields().toArray(new String[options.getFields().size()]));
-            }
-        }
+        final UpdateRequestBuilder builder = client.prepareUpdate(index, type, id);
+        populateUpdateRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<UpdateResponse>() {
             @Override
@@ -386,27 +318,8 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     @Override
     public void get(String index, String type, String id, GetOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.GetResponse>> resultHandler) {
 
-        GetRequestBuilder builder = client.prepareGet(index, type, id);
-
-        if (options != null) {
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.isRefresh() != null) builder.setRefresh(options.isRefresh());
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-
-            if (options.getPreference() != null) builder.setPreference(options.getPreference());
-            if (!options.getFields().isEmpty()) {
-                builder.setStoredFields(options.getFields().toArray(new String[options.getFields().size()]));
-            }
-            if (options.isFetchSource() != null) builder.setFetchSource(options.isFetchSource());
-            if (!options.getFetchSourceIncludes().isEmpty() || !options.getFetchSourceExcludes().isEmpty()) {
-                String[] includes = options.getFetchSourceIncludes().toArray(new String[options.getFetchSourceIncludes().size()]);
-                String[] excludes = options.getFetchSourceExcludes().toArray(new String[options.getFetchSourceExcludes().size()]);
-                builder.setFetchSource(includes, excludes);
-            }
-            if (options.isRealtime() != null) builder.setRealtime(options.isRealtime());
-        }
+        final GetRequestBuilder builder = client.prepareGet(index, type, id);
+        populateGetRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<GetResponse>() {
             @Override
@@ -470,18 +383,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     public void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.DeleteResponse>> resultHandler) {
 
         final DeleteRequestBuilder builder = client.prepareDelete(index, type, id);
-
-        if (options != null) {
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getRefreshPolicy() != null)
-                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getWaitForActiveShard() != null)
-                builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-        }
+        populateDeleteRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<DeleteResponse>() {
             @Override
@@ -496,7 +398,6 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         });
 
     }
-
 
     @Override
     public void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SuggestResponse>> resultHandler) {
@@ -537,6 +438,53 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
+    public void bulk(final List<BulkIndexOptions> bulkIndexOptions,
+                     final List<BulkUpdateOptions> bulkUpdateOptions,
+                     final List<BulkDeleteOptions> bulkDeleteOptions,
+                     final BulkOptions bulkOptions,
+                     final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkResponse>> resultHandler) {
+        final BulkRequestBuilder builder = client.prepareBulk();
+
+        if (bulkOptions != null) {
+            if (bulkOptions.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(bulkOptions.getWaitForActiveShard());
+            if (bulkOptions.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(bulkOptions.getRefreshPolicy().name()));
+            if (bulkOptions.getTimeout() != null) builder.setTimeout(bulkOptions.getTimeout());
+        }
+
+        for (BulkIndexOptions bulkIndexOptionsItem : bulkIndexOptions) {
+            final IndexRequestBuilder indexRequestBuilder = client.prepareIndex(bulkIndexOptionsItem.getIndex(), bulkIndexOptionsItem.getType()).setSource(convertJsonObjectToMap(bulkIndexOptionsItem.getSource()));
+            populateIndexRequestBuilder(indexRequestBuilder, bulkIndexOptionsItem.getIndexOptions());
+            builder.add(indexRequestBuilder);
+        }
+
+        for (BulkUpdateOptions bulkUpdateOptionsItem : bulkUpdateOptions) {
+            final UpdateRequestBuilder updateBuilder = client.prepareUpdate(bulkUpdateOptionsItem.getIndex(), bulkUpdateOptionsItem.getType(), bulkUpdateOptionsItem.getId());
+            populateUpdateRequestBuilder(updateBuilder, bulkUpdateOptionsItem.getUpdateOptions());
+            builder.add(updateBuilder);
+        }
+
+        for (BulkDeleteOptions bulkDeleteOptionsItem : bulkDeleteOptions) {
+            final DeleteRequestBuilder deleteBuilder = client.prepareDelete(bulkDeleteOptionsItem.getIndex(), bulkDeleteOptionsItem.getType(), bulkDeleteOptionsItem.getId());
+            populateDeleteRequestBuilder(deleteBuilder, bulkDeleteOptionsItem.getDeleteOptions());
+            builder.add(deleteBuilder);
+        }
+
+        builder.execute(new ActionListener<BulkResponse>() {
+            @Override
+            public void onResponse(final BulkResponse bulkItemResponses) {
+                resultHandler.handle(Future.succeededFuture(mapToBulkIndexResponse(bulkItemResponses)));
+            }
+
+            @Override
+            public void onFailure(final Exception e) {
+                handleFailure(resultHandler, e);
+            }
+        });
+    }
+
+    @Override
     public void deleteByQuery(List<String> indices, DeleteByQueryOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse>> resultHandler) {
         final DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE);
 
@@ -566,10 +514,96 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         });
     }
 
-
     @Override
     public TransportClient getClient() {
         return client;
+    }
+
+    private void populateIndexRequestBuilder(IndexRequestBuilder builder, IndexOptions options) {
+        if (options != null) {
+            if (options.getId() != null) builder.setId(options.getId());
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getOpType() != null)
+                builder.setOpType(DocWriteRequest.OpType.valueOf(options.getOpType().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+        }
+    }
+
+    private void populateGetRequestBuilder(GetRequestBuilder builder, GetOptions options) {
+        if (options != null) {
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.isRefresh() != null) builder.setRefresh(options.isRefresh());
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+
+            if (options.getPreference() != null) builder.setPreference(options.getPreference());
+            if (!options.getFields().isEmpty()) {
+                builder.setStoredFields(options.getFields().toArray(new String[options.getFields().size()]));
+            }
+            if (options.isFetchSource() != null) builder.setFetchSource(options.isFetchSource());
+            if (!options.getFetchSourceIncludes().isEmpty() || !options.getFetchSourceExcludes().isEmpty()) {
+                String[] includes = options.getFetchSourceIncludes().toArray(new String[options.getFetchSourceIncludes().size()]);
+                String[] excludes = options.getFetchSourceExcludes().toArray(new String[options.getFetchSourceExcludes().size()]);
+                builder.setFetchSource(includes, excludes);
+            }
+            if (options.isRealtime() != null) builder.setRealtime(options.isRealtime());
+        }
+    }
+
+    private void populateDeleteRequestBuilder(DeleteRequestBuilder builder, DeleteOptions options) {
+        if (options != null) {
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+        }
+    }
+
+
+    private void populateUpdateRequestBuilder(UpdateRequestBuilder builder, UpdateOptions options) {
+        if (options != null) {
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+
+            if (options.getRetryOnConflict() != null) builder.setRetryOnConflict(options.getRetryOnConflict());
+            if (options.getDoc() != null) builder.setDoc(options.getDoc().encode(), XContentType.JSON);
+            if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode(), XContentType.JSON);
+            if (options.isDocAsUpsert() != null) builder.setDocAsUpsert(options.isDocAsUpsert());
+            if (options.isDetectNoop() != null) builder.setDetectNoop(options.isDetectNoop());
+            if (options.isScriptedUpsert() != null) builder.setScriptedUpsert(options.isScriptedUpsert());
+
+            if (options.getScript() != null) {
+                if (options.getScriptType() != null) {
+                    Map<String, Object> params = (options.getScriptParams() == null ? null : convertJsonObjectToMap(options.getScriptParams()));
+                    builder.setScript(new Script(options.getScriptType(), options.getScriptLang(), options.getScript(), params));
+                } else {
+                    builder.setScript(new Script(options.getScript()));
+                }
+            }
+            if (!options.getFields().isEmpty()) {
+                builder.setFields(options.getFields().toArray(new String[options.getFields().size()]));
+            }
+        }
     }
 
     private void populateSearchRequestBuilder(SearchRequestBuilder builder, AbstractSearchOptions options) {

@@ -17,8 +17,11 @@ package com.hubrick.vertx.elasticsearch.impl;
 
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
-import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkDeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkResponse;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkUpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -65,13 +68,6 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
     }
 
     @Override
-    public Observable<BulkIndexResponse> bulkIndex(final String index, final String type, final List<JsonObject> sources, final BulkOptions options) {
-        final ObservableFuture<BulkIndexResponse> observableFuture = RxHelper.observableFuture();
-        elasticSearchService.bulkIndex(index, type, sources, options, observableFuture.toHandler());
-        return observableFuture;
-    }
-
-    @Override
     public Observable<UpdateResponse> update(String index, String type, String id, UpdateOptions options) {
         final ObservableFuture<UpdateResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.update(index, type, id, options, observableFuture.toHandler());
@@ -83,7 +79,6 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
         final ObservableFuture<GetResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.get(index, type, id, options, observableFuture.toHandler());
         return observableFuture;
-
     }
 
     @Override
@@ -91,7 +86,6 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
         final ObservableFuture<SearchResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.search(indices, options, observableFuture.toHandler());
         return observableFuture;
-
     }
 
     @Override
@@ -99,7 +93,6 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
         final ObservableFuture<SearchResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.searchScroll(scrollId, options, observableFuture.toHandler());
         return observableFuture;
-
     }
 
     @Override
@@ -107,7 +100,6 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
         final ObservableFuture<DeleteResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.delete(index, type, id, options, observableFuture.toHandler());
         return observableFuture;
-
     }
 
     @Override
@@ -115,7 +107,16 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
         final ObservableFuture<SuggestResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.suggest(indices, options, observableFuture.toHandler());
         return observableFuture;
+    }
 
+    @Override
+    public Observable<BulkResponse> bulk(List<BulkIndexOptions> bulkIndexOptions,
+                                         List<BulkUpdateOptions> bulkUpdateOptions,
+                                         List<BulkDeleteOptions> bulkDeleteOptions,
+                                         BulkOptions bulkOptions) {
+        final ObservableFuture<BulkResponse> observableFuture = RxHelper.observableFuture();
+        elasticSearchService.bulk(bulkIndexOptions, bulkUpdateOptions, bulkDeleteOptions, bulkOptions, observableFuture.toHandler());
+        return observableFuture;
     }
 
     @Override

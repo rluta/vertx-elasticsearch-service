@@ -16,9 +16,10 @@
 package com.hubrick.vertx.elasticsearch.impl;
 
 import com.google.common.collect.ImmutableList;
-import com.hubrick.vertx.elasticsearch.model.BulkItemResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkResponseItem;
 import com.hubrick.vertx.elasticsearch.model.Hit;
 import com.hubrick.vertx.elasticsearch.model.Hits;
+import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.Retries;
 import com.hubrick.vertx.elasticsearch.model.Shards;
 import com.hubrick.vertx.elasticsearch.model.Suggestion;
@@ -138,27 +139,33 @@ public class ElasticSearchServiceMapper {
         return indexResponse;
     }
 
-    public static com.hubrick.vertx.elasticsearch.model.BulkIndexResponse mapToBulkIndexResponse(BulkResponse bulkResponse) {
-        final com.hubrick.vertx.elasticsearch.model.BulkIndexResponse bulkIndexResponse = new com.hubrick.vertx.elasticsearch.model.BulkIndexResponse();
+    public static com.hubrick.vertx.elasticsearch.model.BulkResponse mapToBulkIndexResponse(BulkResponse bulkResponse) {
+        final com.hubrick.vertx.elasticsearch.model.BulkResponse bulkIndexResponse = new com.hubrick.vertx.elasticsearch.model.BulkResponse();
 
         final org.elasticsearch.action.bulk.BulkItemResponse[] bulkResponseItems = bulkResponse.getItems();
 
-        final ImmutableList.Builder<BulkItemResponse> bulkResponseItemsBuilder = ImmutableList.builder();
+        final ImmutableList.Builder<BulkResponseItem> bulkResponseItemsBuilder = ImmutableList.builder();
         for (org.elasticsearch.action.bulk.BulkItemResponse bulkItemResponse : bulkResponseItems) {
                bulkResponseItemsBuilder.add(mapToBulkItemResponse(bulkItemResponse));
         }
 
+        bulkIndexResponse.setRawResponse(readResponse(bulkResponse));
         bulkIndexResponse.setResponses(bulkResponseItemsBuilder.build());
         bulkIndexResponse.setTookInMillis(bulkResponse.getTook().getMillis());
 
         return bulkIndexResponse;
     }
 
-    public static BulkItemResponse mapToBulkItemResponse(org.elasticsearch.action.bulk.BulkItemResponse itemResponse) {
-        final com.hubrick.vertx.elasticsearch.model.BulkItemResponse bulkItemResponse = new com.hubrick.vertx.elasticsearch.model.BulkItemResponse();
+    public static BulkResponseItem mapToBulkItemResponse(org.elasticsearch.action.bulk.BulkItemResponse itemResponse) {
+        final BulkResponseItem bulkItemResponse = new BulkResponseItem();
 
         bulkItemResponse.setId(itemResponse.getId());
         bulkItemResponse.setShards(mapToShards(itemResponse.getResponse().getShardInfo()));
+        bulkItemResponse.setIndex(itemResponse.getIndex());
+        bulkItemResponse.setType(itemResponse.getType());
+        bulkItemResponse.setOpType(OpType.valueOf(itemResponse.getOpType().name()));
+        bulkItemResponse.setFailure(itemResponse.getFailure() != null ? readResponse(itemResponse.getFailure()) : new JsonObject());
+        bulkItemResponse.setFailureMessage(itemResponse.getFailureMessage());
 
         return bulkItemResponse;
     }

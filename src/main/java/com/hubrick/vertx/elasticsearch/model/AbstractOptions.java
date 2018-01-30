@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * Base options for all elasticsearch operations
  */
-public class AbstractOptions<T extends AbstractOptions<T>> {
+public abstract class AbstractOptions<T extends AbstractOptions<T>> {
 
     private String routing;
     private String parent;
