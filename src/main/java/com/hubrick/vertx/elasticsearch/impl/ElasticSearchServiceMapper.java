@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.model.BulkResponseItem;
 import com.hubrick.vertx.elasticsearch.model.Hit;
 import com.hubrick.vertx.elasticsearch.model.Hits;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchResponseItem;
 import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.Retries;
 import com.hubrick.vertx.elasticsearch.model.Shards;
@@ -31,6 +32,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.broadcast.BroadcastResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
@@ -139,21 +141,36 @@ public class ElasticSearchServiceMapper {
         return indexResponse;
     }
 
-    public static com.hubrick.vertx.elasticsearch.model.BulkResponse mapToBulkIndexResponse(BulkResponse bulkResponse) {
-        final com.hubrick.vertx.elasticsearch.model.BulkResponse bulkIndexResponse = new com.hubrick.vertx.elasticsearch.model.BulkResponse();
+    public static com.hubrick.vertx.elasticsearch.model.BulkResponse mapToBulkIndexResponse(BulkResponse esBulkResponse) {
+        final com.hubrick.vertx.elasticsearch.model.BulkResponse bulkResponse = new com.hubrick.vertx.elasticsearch.model.BulkResponse();
 
-        final org.elasticsearch.action.bulk.BulkItemResponse[] bulkResponseItems = bulkResponse.getItems();
+        final org.elasticsearch.action.bulk.BulkItemResponse[] bulkResponseItems = esBulkResponse.getItems();
 
         final ImmutableList.Builder<BulkResponseItem> bulkResponseItemsBuilder = ImmutableList.builder();
         for (org.elasticsearch.action.bulk.BulkItemResponse bulkItemResponse : bulkResponseItems) {
-               bulkResponseItemsBuilder.add(mapToBulkItemResponse(bulkItemResponse));
+            bulkResponseItemsBuilder.add(mapToBulkItemResponse(bulkItemResponse));
         }
 
-        bulkIndexResponse.setRawResponse(readResponse(bulkResponse));
-        bulkIndexResponse.setResponses(bulkResponseItemsBuilder.build());
-        bulkIndexResponse.setTookInMillis(bulkResponse.getTook().getMillis());
+        bulkResponse.setRawResponse(readResponse(esBulkResponse));
+        bulkResponse.setResponses(bulkResponseItemsBuilder.build());
+        bulkResponse.setTookInMillis(esBulkResponse.getTook().getMillis());
 
-        return bulkIndexResponse;
+        return bulkResponse;
+    }
+
+    public static com.hubrick.vertx.elasticsearch.model.MultiSearchResponse mapToMultiSearchResponse(MultiSearchResponse esMultiSearchResponse) {
+        final com.hubrick.vertx.elasticsearch.model.MultiSearchResponse multiSearchResponse = new com.hubrick.vertx.elasticsearch.model.MultiSearchResponse();
+
+        multiSearchResponse.setRawResponse(readResponse(esMultiSearchResponse));
+        multiSearchResponse.setResponses(
+                Arrays.asList(
+                        esMultiSearchResponse.getResponses()).stream()
+                        .map(e -> new MultiSearchResponseItem().setSearchResponse(mapToSearchResponse(e.getResponse())).setFailureMessage(e.getFailureMessage()))
+                        .collect(Collectors.toList()
+                )
+        );
+
+        return multiSearchResponse;
     }
 
     public static BulkResponseItem mapToBulkItemResponse(org.elasticsearch.action.bulk.BulkItemResponse itemResponse) {
@@ -376,7 +393,7 @@ public class ElasticSearchServiceMapper {
     protected static JsonObject readResponse(ToXContent toXContent) {
         try {
             final XContentBuilder builder = XContentFactory.jsonBuilder();
-            if(toXContent.isFragment()) {
+            if (toXContent.isFragment()) {
                 builder.startObject();
                 toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
                 builder.endObject();

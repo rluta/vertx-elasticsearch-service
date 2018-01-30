@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Search operation options base class
@@ -54,6 +55,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     private List<BaseSortOption> sorts = new ArrayList<>();
     private Map<String, ScriptFieldOption> scriptFields = new HashMap<>();
     private List<String> storedFields = new ArrayList<>();
+    private IndicesOptions indicesOptions;
 
     public static final String JSON_FIELD_TYPES = "types";
     public static final String JSON_FIELD_SEARCH_TYPE = "searchType";
@@ -77,6 +79,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     public static final String JSON_FIELD_SORTS = "sorts";
     public static final String JSON_FIELD_SCRIPT_FIELDS = "scriptFields";
     public static final String JSON_FIELD_STORED_FIELDS = "storedFields";
+    public static final String JSON_FIELD_INDICES_OPTIONS = "indicesOptions";
 
     public AbstractSearchOptions() {
     }
@@ -103,7 +106,8 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         aggregations = other.getAggregations();
         sorts = other.getSorts();
         scriptFields = other.getScriptFields();
-        scriptFields = other.getScriptFields();
+        storedFields = other.getStoredFields();
+        indicesOptions = other.getIndicesOptions();
     }
 
     public AbstractSearchOptions(JsonObject json) {
@@ -126,6 +130,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         sourceExcludes = json.getJsonArray(JSON_FIELD_SOURCE_EXCLUDES, new JsonArray()).getList();
         trackScores = json.getBoolean(JSON_FIELD_TRACK_SCORES);
         storedFields = json.getJsonArray(JSON_FIELD_STORED_FIELDS, new JsonArray()).getList();
+        indicesOptions = Optional.ofNullable(json.getJsonObject(JSON_FIELD_INDICES_OPTIONS)).map(IndicesOptions::new).orElse(null);
 
         JsonArray aggregationsJson = json.getJsonArray(JSON_FIELD_AGGREGATIONS);
         if (aggregationsJson != null) {
@@ -389,9 +394,18 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         return returnThis();
     }
 
+    public IndicesOptions getIndicesOptions() {
+        return indicesOptions;
+    }
+
+    public T setIndicesOptions(IndicesOptions indicesOptions) {
+        this.indicesOptions = indicesOptions;
+        return returnThis();
+    }
+
     public JsonObject toJson() {
 
-        JsonObject json = new JsonObject();
+        final JsonObject json = new JsonObject();
 
         if (!types.isEmpty()) json.put(JSON_FIELD_TYPES, new JsonArray(types));
         if (searchType != null) json.put(JSON_FIELD_SEARCH_TYPE, searchType.name().toLowerCase());
@@ -413,6 +427,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         if (trackScores != null) json.put(JSON_FIELD_TRACK_SCORES, trackScores);
         if (explain != null) json.put(JSON_FIELD_EXPLAIN, explain);
         if (!storedFields.isEmpty()) json.put(JSON_FIELD_STORED_FIELDS, new JsonArray(storedFields));
+        if (indicesOptions != null) json.put(JSON_FIELD_INDICES_OPTIONS, indicesOptions.toJson());
 
         if (aggregations != null && !aggregations.isEmpty()) {
             JsonArray aggregationArray = new JsonArray();

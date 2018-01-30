@@ -30,9 +30,9 @@ public class SuggestionEntryOption {
     private String highlight;
     private Float score;
 
-    public static final String JSON_FIELD_TEXT = "text";
-    public static final String JSON_FIELD_HIGHLIGHT = "highlight";
-    public static final String JSON_FIELD_SCORE = "score";
+    private static final String JSON_FIELD_TEXT = "text";
+    private static final String JSON_FIELD_HIGHLIGHT = "highlight";
+    private static final String JSON_FIELD_SCORE = "score";
 
     public SuggestionEntryOption() {
     }

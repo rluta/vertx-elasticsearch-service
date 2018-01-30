@@ -29,6 +29,9 @@ import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
@@ -126,6 +129,12 @@ public interface RxElasticSearchService {
                                   final List<BulkDeleteOptions> deleteOptions,
                                   final BulkOptions bulkOptions);
 
+    default Observable<MultiSearchResponse> multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions) {
+        return multiSearch(multiSearchQueryOptions, new MultiSearchOptions());
+    }
+
+    Observable<MultiSearchResponse> multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions,
+                                                final MultiSearchOptions options);
 
     default Observable<DeleteByQueryResponse> deleteByQuery(String index, DeleteByQueryOptions options) {
         return deleteByQuery(Collections.singletonList(index), options);

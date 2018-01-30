@@ -2,21 +2,19 @@
     "test_type": {
         "properties": {
             "message": {
-                "type": "text",
-                "fielddata": true
+                "type": "keyword"
             },
             "message_suggest": {
                 "type": "completion"
             },
             "user": {
-                "type": "text",
-                "fielddata": true
+                "type": "keyword"
             },
             "obj": {
                 "type": "object",
                 "properties": {
                     "array": {
-                        "type": "text"
+                        "type": "keyword"
                     }
                 }
             }

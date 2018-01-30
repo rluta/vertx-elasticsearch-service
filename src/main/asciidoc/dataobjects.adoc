@@ -196,6 +196,7 @@
 |[[explain]]`explain`|`Boolean`|-
 |[[fetchSource]]`fetchSource`|`Boolean`|-
 |[[from]]`from`|`Number (Integer)`|-
+|[[indicesOptions]]`indicesOptions`|`link:dataobjects.html#IndicesOptions[IndicesOptions]`|-
 |[[maxRetries]]`maxRetries`|`Number (Integer)`|-
 |[[minScore]]`minScore`|`Number (Float)`|-
 |[[postFilter]]`postFilter`|`Json object`|-
@@ -455,6 +456,27 @@
 |[[version]]`version`|`Number (Long)`|-
 |===
 
+[[IndicesOptions]]
+== IndicesOptions
+
+++++
+ Multisearch operation options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[allowAliasesToMultipleIndices]]`allowAliasesToMultipleIndices`|`Boolean`|-
+|[[allowNoIndices]]`allowNoIndices`|`Boolean`|-
+|[[expandToClosedIndices]]`expandToClosedIndices`|`Boolean`|-
+|[[expandToOpenIndices]]`expandToOpenIndices`|`Boolean`|-
+|[[forbidClosedIndices]]`forbidClosedIndices`|`Boolean`|-
+|[[ignoreAliases]]`ignoreAliases`|`Boolean`|-
+|[[ignoreUnavailable]]`ignoreUnavailable`|`Boolean`|-
+|===
+
 [[MappingOptions]]
 == MappingOptions
 
@@ -467,6 +489,68 @@
 [frame="topbot"]
 |===
 ^|Name | Type ^| Description
+|===
+
+[[MultiSearchOptions]]
+== MultiSearchOptions
+
+++++
+ Multisearch operation options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[indicesOptions]]`indicesOptions`|`link:dataobjects.html#IndicesOptions[IndicesOptions]`|-
+|[[maxConcurrentSearchRequests]]`maxConcurrentSearchRequests`|`Number (Integer)`|-
+|===
+
+[[MultiSearchQueryOptions]]
+== MultiSearchQueryOptions
+
+++++
+ Multisearch operation query options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[indices]]`indices`|`Array of String`|-
+|[[searchOptions]]`searchOptions`|`link:dataobjects.html#SearchOptions[SearchOptions]`|-
+|===
+
+[[MultiSearchResponse]]
+== MultiSearchResponse
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[responses]]`responses`|`Array of link:dataobjects.html#MultiSearchResponseItem[MultiSearchResponseItem]`|-
+|===
+
+[[MultiSearchResponseItem]]
+== MultiSearchResponseItem
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[failureMessage]]`failureMessage`|`String`|-
+|[[searchResponse]]`searchResponse`|`link:dataobjects.html#SearchResponse[SearchResponse]`|-
 |===
 
 [[Retries]]
@@ -537,6 +621,7 @@
 |[[explain]]`explain`|`Boolean`|-
 |[[fetchSource]]`fetchSource`|`Boolean`|-
 |[[from]]`from`|`Number (Integer)`|-
+|[[indicesOptions]]`indicesOptions`|`link:dataobjects.html#IndicesOptions[IndicesOptions]`|-
 |[[minScore]]`minScore`|`Number (Float)`|-
 |[[postFilter]]`postFilter`|`Json object`|-
 |[[preference]]`preference`|`String`|-

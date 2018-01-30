@@ -19,8 +19,8 @@ import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.RxElasticSearchService;
 import com.hubrick.vertx.elasticsearch.model.BulkDeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
-import com.hubrick.vertx.elasticsearch.model.BulkResponse;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkResponse;
 import com.hubrick.vertx.elasticsearch.model.BulkUpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
@@ -30,6 +30,9 @@ import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
@@ -116,6 +119,13 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
                                          BulkOptions bulkOptions) {
         final ObservableFuture<BulkResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.bulk(bulkIndexOptions, bulkUpdateOptions, bulkDeleteOptions, bulkOptions, observableFuture.toHandler());
+        return observableFuture;
+    }
+
+    @Override
+    public Observable<MultiSearchResponse> multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions, MultiSearchOptions options) {
+        final ObservableFuture<MultiSearchResponse> observableFuture = RxHelper.observableFuture();
+        elasticSearchService.multiSearch(multiSearchQueryOptions, options, observableFuture.toHandler());
         return observableFuture;
     }
 

@@ -31,6 +31,8 @@ import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
@@ -39,8 +41,6 @@ import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -62,12 +62,12 @@ import java.util.stream.Collectors;
 
 import static com.hubrick.vertx.elasticsearch.VertxMatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 /**
  * {@link ElasticSearchServiceVerticle} integration test
@@ -188,46 +188,53 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void testSearchSimple(TestContext testContext) throws Exception {
+    public void testSearch(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        SearchOptions options = new SearchOptions()
-                .setTimeoutInMillis(1000l)
-                .setSize(10)
-                .setFrom(10)
-                .setSourceIncludes(Arrays.asList("user", "message"))
-                .addFieldSort("user", SortOrder.DESC)
-                .addScripSort("doc['message']", "painless", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
-                .addScriptField("script_field", "doc['message']", "painless", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
-                .setQuery(new JsonObject().put("match_all", new JsonObject()));
+        JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
 
-        rxService.search(index, options)
+        IndexOptions indexOptions = new IndexOptions().setId(id);
+        rxService.index(index, type, source, indexOptions)
+                .flatMap(indexResponse -> {
+                    final ObservableFuture<IndexResponse> observableFuture = RxHelper.observableFuture();
+                    vertx.setTimer(2000l, event -> observableFuture.toHandler().handle(Future.succeededFuture(indexResponse)));
+                    return observableFuture;
+                })
+                .flatMap(indexResponse -> {
+                    SearchOptions searchOptions = new SearchOptions()
+                            .setTimeoutInMillis(1000l)
+                            .setSize(10)
+                            .setSourceIncludes(Arrays.asList("user", "message"))
+                            .addFieldSort("user", SortOrder.DESC)
+                            .addScripSort("doc['message'].value", "painless", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
+                            .addScriptField("script_field", "doc['message'].value", "painless", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
+                            .setQuery(new JsonObject().put("match_all", new JsonObject()));
+
+                    return rxService.search(index, searchOptions);
+                })
                 .subscribe(
-                        json -> {
-                            assertThat(testContext, json, notNullValue());
+                        searchResponse -> {
+                            assertThat(testContext, searchResponse, notNullValue());
+                            assertThat(testContext, searchResponse.getHits().getHits(), hasSize(1));
+
+                            assertThat(testContext, searchResponse.getHits().getHits().get(0).getIndex(), is(index));
+                            assertThat(testContext, searchResponse.getHits().getHits().get(0).getType(), is(type));
+                            assertThat(testContext, searchResponse.getHits().getHits().get(0).getId(), is(id));
+
+                            assertThat(testContext, searchResponse.getHits().getHits().get(0).getSource(), notNullValue());
+                            assertThat(testContext, searchResponse.getHits().getHits().get(0).getSource().getString("user"), is(source_user));
+                            assertThat(testContext, searchResponse.getHits().getHits().get(0).getSource().getString("message"), is(source_message));
+
                             async.complete();
                         },
                         error -> testContext.fail(error)
                 );
-    }
-
-    @Test
-    public void testSearch_EventBusInvalidEnum(TestContext testContext) throws Exception {
-
-        final Async async = testContext.async();
-        JsonObject json = new JsonObject()
-                .put("indices", new JsonArray().add(index))
-                .put("options", new JsonObject().put("searchType", "invalid_type"));
-
-        DeliveryOptions options = new DeliveryOptions();
-        options.addHeader("action", "search");
-
-        vertx.eventBus().<JsonObject>send("et.elasticsearch", json, options, res -> {
-            assertThat(testContext, res.failed(), is(true));
-            Throwable t = res.cause();
-            assertThat(testContext, t, instanceOf(ReplyException.class));
-            async.complete();
-        });
     }
 
     @Test
@@ -378,6 +385,9 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 options
         ).subscribe(
                 bulkIndexResponse -> {
+                    assertThat(testContext, bulkIndexResponse, notNullValue());
+                    assertThat(testContext, bulkIndexResponse.getRawResponse(), notNullValue());
+
                     assertThat(testContext, bulkIndexResponse.getResponses().size(), is(2));
                     assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getId()).collect(Collectors.toList()), containsInAnyOrder("1", "2"));
                     assertThat(testContext, bulkIndexResponse.getResponses().stream().map(e -> e.getShards()).collect(Collectors.toList()), hasSize(2));
@@ -393,6 +403,59 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                 },
                 error -> testContext.fail(error)
         );
+    }
+
+    @Test
+    public void testMultiSearch(TestContext testContext) throws Exception {
+
+        final Async async = testContext.async();
+        JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
+
+        IndexOptions indexOptions = new IndexOptions().setId(id);
+        rxService.index(index, type, source, indexOptions)
+                .flatMap(indexResponse -> {
+                    final ObservableFuture<IndexResponse> observableFuture = RxHelper.observableFuture();
+                    vertx.setTimer(2000l, event -> observableFuture.toHandler().handle(Future.succeededFuture(indexResponse)));
+                    return observableFuture;
+                })
+                .flatMap(indexResponse -> {
+                    SearchOptions searchOptions = new SearchOptions()
+                            .setTimeoutInMillis(1000l)
+                            .setSize(10)
+                            .setSourceIncludes(Arrays.asList("user", "message"))
+                            .addFieldSort("user", SortOrder.DESC)
+                            .addScripSort("doc['message'].value", "painless", ScriptSortOption.Type.STRING, new JsonObject().put("param1", ImmutableList.of("1", "2", "3")), SortOrder.ASC)
+                            .addScriptField("script_field", "doc['message'].value", "painless", new JsonObject().put("param1", ImmutableList.of("1", "2", "3")))
+                            .setQuery(new JsonObject().put("match_all", new JsonObject()));
+
+                    return rxService.multiSearch(ImmutableList.of(new MultiSearchQueryOptions().addIndex(index).setSearchOptions(searchOptions)));
+                })
+                .subscribe(
+                        multiSearchResponse -> {
+                            assertThat(testContext, multiSearchResponse, notNullValue());
+                            assertThat(testContext, multiSearchResponse.getResponses(), hasSize(1));
+                            assertThat(testContext, multiSearchResponse.getRawResponse(), notNullValue());
+
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getFailureMessage(), nullValue());
+
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getIndex(), is(index));
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getType(), is(type));
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getId(), is(id));
+
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getSource(), notNullValue());
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getSource().getString("user"), is(source_user));
+                            assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getSource().getString("message"), is(source_message));
+
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
     }
 
     @Test
