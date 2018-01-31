@@ -491,6 +491,79 @@
 ^|Name | Type ^| Description
 |===
 
+[[MultiGetOptions]]
+== MultiGetOptions
+
+++++
+ MultiGet operation options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[preference]]`preference`|`String`|-
+|[[realtime]]`realtime`|`Boolean`|-
+|[[refresh]]`refresh`|`Boolean`|-
+|===
+
+[[MultiGetQueryOptions]]
+== MultiGetQueryOptions
+
+++++
+ MultiGet operation query options
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[fetchSource]]`fetchSource`|`Boolean`|-
+|[[fetchSourceExcludes]]`fetchSourceExcludes`|`Array of String`|-
+|[[fetchSourceIncludes]]`fetchSourceIncludes`|`Array of String`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[parent]]`parent`|`String`|-
+|[[routing]]`routing`|`String`|-
+|[[storedFields]]`storedFields`|`Array of String`|-
+|[[type]]`type`|`String`|-
+|===
+
+[[MultiGetResponse]]
+== MultiGetResponse
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[rawResponse]]`rawResponse`|`Json object`|-
+|[[responses]]`responses`|`Array of link:dataobjects.html#MultiGetResponseItem[MultiGetResponseItem]`|-
+|===
+
+[[MultiGetResponseItem]]
+== MultiGetResponseItem
+
+++++
+++++
+'''
+
+[cols=">25%,^25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[failureMessage]]`failureMessage`|`String`|-
+|[[getResult]]`getResult`|`link:dataobjects.html#GetResult[GetResult]`|-
+|[[id]]`id`|`String`|-
+|[[index]]`index`|`String`|-
+|[[type]]`type`|`String`|-
+|===
+
 [[MultiSearchOptions]]
 == MultiSearchOptions
 

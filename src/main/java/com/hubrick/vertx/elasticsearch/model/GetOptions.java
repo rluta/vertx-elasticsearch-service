@@ -52,11 +52,11 @@ public class GetOptions extends AbstractOptions<GetOptions> {
 
         preference = other.getPreference();
         fields.addAll(other.getFields());
-        fetchSource = other.isFetchSource();
+        fetchSource = other.getFetchSource();
         fetchSourceIncludes = other.getFetchSourceIncludes();
         fetchSourceExcludes = other.getFetchSourceExcludes();
-        realtime = other.isRealtime();
-        refresh = other.isRefresh();
+        realtime = other.getRealtime();
+        refresh = other.getRefresh();
     }
 
     public GetOptions(JsonObject json) {
@@ -89,7 +89,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         return this;
     }
 
-    public Boolean isFetchSource() {
+    public Boolean getFetchSource() {
         return fetchSource;
     }
 
@@ -120,7 +120,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         return this;
     }
 
-    public Boolean isRealtime() {
+    public Boolean getRealtime() {
         return realtime;
     }
 
@@ -129,7 +129,7 @@ public class GetOptions extends AbstractOptions<GetOptions> {
         return this;
     }
 
-    public Boolean isRefresh() {
+    public Boolean getRefresh() {
         return refresh;
     }
 
@@ -144,11 +144,11 @@ public class GetOptions extends AbstractOptions<GetOptions> {
 
         if (getPreference() != null) json.put(FIELD_PREFERENCE, getPreference());
         if (!getFields().isEmpty()) json.put(FIELD_FIELDS, new JsonArray(getFields()));
-        if (isFetchSource() != null) json.put(FIELD_FETCH_SOURCE, isFetchSource());
+        if (getFetchSource() != null) json.put(FIELD_FETCH_SOURCE, getFetchSource());
         if (!getFetchSourceIncludes().isEmpty()) json.put(FIELD_FETCH_SOURCE_INCLUDES, new JsonArray(getFetchSourceIncludes()));
         if (!getFetchSourceExcludes().isEmpty()) json.put(FIELD_FETCH_SOURCE_EXCLUDES, new JsonArray(getFetchSourceExcludes()));
-        if (isRealtime() != null) json.put(FIELD_REALTIME, isRealtime());
-        if (isRefresh() != null) json.put(FIELD_REFRESH, isRefresh());
+        if (getRealtime() != null) json.put(FIELD_REALTIME, getRealtime());
+        if (getRefresh() != null) json.put(FIELD_REFRESH, getRefresh());
 
         return json;
     }

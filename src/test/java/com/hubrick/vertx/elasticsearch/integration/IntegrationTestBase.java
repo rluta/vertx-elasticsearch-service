@@ -32,6 +32,7 @@ import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiGetQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
@@ -451,6 +452,45 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                             assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getSource(), notNullValue());
                             assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getSource().getString("user"), is(source_user));
                             assertThat(testContext, multiSearchResponse.getResponses().get(0).getSearchResponse().getHits().getHits().get(0).getSource().getString("message"), is(source_message));
+
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
+    }
+
+    @Test
+    public void testMultiGet(TestContext testContext) throws Exception {
+
+        final Async async = testContext.async();
+        JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
+
+        IndexOptions options = new IndexOptions().setId(id);
+        rxService.index(index, type, source, options)
+                .flatMap(indexResponse -> rxService.multiGet(ImmutableList.of(new MultiGetQueryOptions().setId(id).setIndex(index).setType(type).setFetchSource(true))))
+                .subscribe(
+                        multiGetResponse -> {
+                            assertThat(testContext, multiGetResponse, notNullValue());
+                            assertThat(testContext, multiGetResponse.getResponses(), hasSize(1));
+                            assertThat(testContext, multiGetResponse.getRawResponse(), notNullValue());
+
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getFailureMessage(), nullValue());
+
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getIndex(), is(index));
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getType(), is(type));
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getId(), is(id));
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getExists(), is(true));
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getVersion(), greaterThan(0l));
+
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getSource(), notNullValue());
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getSource().getString("user"), is(source_user));
+                            assertThat(testContext, multiGetResponse.getResponses().get(0).getGetResult().getSource().getString("message"), is(source_message));
 
                             async.complete();
                         },

@@ -35,6 +35,8 @@ import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.FieldSortOption;
 import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.ScriptFieldOption;
@@ -59,6 +61,9 @@ import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetRequestBuilder;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.MultiSearchRequestBuilder;
@@ -161,6 +166,7 @@ import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStat
 import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.ScriptSortBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
@@ -178,6 +184,7 @@ import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.ma
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteByQueryResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToIndexResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToMultiGetResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToMultiSearchResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSearchResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSuggestResponse;
@@ -501,7 +508,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                 builder.setMaxConcurrentSearchRequests(options.getMaxConcurrentSearchRequests());
             }
 
-            if(options.getIndicesOptions() != null) {
+            if (options.getIndicesOptions() != null) {
                 final IndicesOptions defaultIndicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
                 builder.setIndicesOptions(
                         IndicesOptions.fromOptions(
@@ -528,6 +535,56 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             @Override
             public void onResponse(final MultiSearchResponse multiSearchResponse) {
                 resultHandler.handle(Future.succeededFuture(mapToMultiSearchResponse(multiSearchResponse)));
+            }
+
+            @Override
+            public void onFailure(final Exception e) {
+                handleFailure(resultHandler, e);
+            }
+        });
+    }
+
+    @Override
+    public void multiGet(final List<MultiGetQueryOptions> multiGetQueryOptions,
+                         final MultiGetOptions options,
+                         final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiGetResponse>> resultHandler) {
+
+        final MultiGetRequestBuilder builder = client.prepareMultiGet();
+
+        if (options != null) {
+            if (options.getRefresh() != null) {
+                builder.setRefresh(options.getRefresh());
+            }
+            if (options.getRealtime() != null) {
+                builder.setRealtime(options.getRealtime());
+            }
+            if (options.getPreference() != null) {
+                builder.setPreference(options.getPreference());
+            }
+        }
+
+        for (MultiGetQueryOptions multiGetQueryOptionsItem : multiGetQueryOptions) {
+            final MultiGetRequest.Item item = new MultiGetRequest.Item(multiGetQueryOptionsItem.getIndex(), multiGetQueryOptionsItem.getType(), multiGetQueryOptionsItem.getId());
+            if (multiGetQueryOptionsItem.getParent() != null) item.parent(multiGetQueryOptionsItem.getParent());
+            if (multiGetQueryOptionsItem.getRouting() != null) item.routing(multiGetQueryOptionsItem.getRouting());
+            if (multiGetQueryOptionsItem.getStoredFields() != null) item.storedFields(multiGetQueryOptionsItem.getStoredFields().toArray(new String[0]));
+            if (multiGetQueryOptionsItem.getFetchSource() != null) {
+                item.fetchSourceContext(
+                        new FetchSourceContext(
+                                multiGetQueryOptionsItem.getFetchSource(),
+                                multiGetQueryOptionsItem.getFetchSourceIncludes().toArray(new String[0]),
+                                multiGetQueryOptionsItem.getFetchSourceExcludes().toArray(new String[0])
+                        )
+                );
+            }
+
+            builder.add(item);
+        }
+
+        builder.execute(new ActionListener<MultiGetResponse>() {
+            @Override
+            public void onResponse(final MultiGetResponse multiGetResponse) {
+                resultHandler.handle(Future.succeededFuture(mapToMultiGetResponse(multiGetResponse)));
             }
 
             @Override
@@ -593,7 +650,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         if (options != null) {
             if (options.getRouting() != null) builder.setRouting(options.getRouting());
             if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.isRefresh() != null) builder.setRefresh(options.isRefresh());
+            if (options.getRefresh() != null) builder.setRefresh(options.getRefresh());
             if (options.getVersion() != null) builder.setVersion(options.getVersion());
             if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
 
@@ -601,13 +658,13 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             if (!options.getFields().isEmpty()) {
                 builder.setStoredFields(options.getFields().toArray(new String[options.getFields().size()]));
             }
-            if (options.isFetchSource() != null) builder.setFetchSource(options.isFetchSource());
+            if (options.getFetchSource() != null) builder.setFetchSource(options.getFetchSource());
             if (!options.getFetchSourceIncludes().isEmpty() || !options.getFetchSourceExcludes().isEmpty()) {
                 String[] includes = options.getFetchSourceIncludes().toArray(new String[options.getFetchSourceIncludes().size()]);
                 String[] excludes = options.getFetchSourceExcludes().toArray(new String[options.getFetchSourceExcludes().size()]);
                 builder.setFetchSource(includes, excludes);
             }
-            if (options.isRealtime() != null) builder.setRealtime(options.isRealtime());
+            if (options.getRealtime() != null) builder.setRealtime(options.getRealtime());
         }
     }
 
@@ -684,7 +741,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             builder.storedFields((String[]) options.getStoredFields().toArray(new String[options.getTypes().size()]));
         }
 
-        if(options.getIndicesOptions() != null) {
+        if (options.getIndicesOptions() != null) {
             final IndicesOptions defaultIndicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
             builder.setIndicesOptions(
                     IndicesOptions.fromOptions(

@@ -30,6 +30,9 @@ import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiGetOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetResponse;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchResponse;
@@ -126,6 +129,13 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
     public Observable<MultiSearchResponse> multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions, MultiSearchOptions options) {
         final ObservableFuture<MultiSearchResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.multiSearch(multiSearchQueryOptions, options, observableFuture.toHandler());
+        return observableFuture;
+    }
+
+    @Override
+    public Observable<MultiGetResponse> multiGet(List<MultiGetQueryOptions> multiGetQueryOptions, MultiGetOptions options) {
+        final ObservableFuture<MultiGetResponse> observableFuture = RxHelper.observableFuture();
+        elasticSearchService.multiGet(multiGetQueryOptions, options, observableFuture.toHandler());
         return observableFuture;
     }
 

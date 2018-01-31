@@ -28,6 +28,8 @@ import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiGetOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
@@ -248,6 +250,16 @@ public interface ElasticSearchService {
     void multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions,
                      final MultiSearchOptions options,
                      final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiSearchResponse>> resultHandler);
+
+    @GenIgnore
+    @ProxyIgnore
+    default void multiGet(final List<MultiGetQueryOptions> multiGetQueryOptions, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiGetResponse>> resultHandler) {
+        multiGet(multiGetQueryOptions, new MultiGetOptions(), resultHandler);
+    }
+
+    void multiGet(final List<MultiGetQueryOptions> multiGetQueryOptions,
+                  final MultiGetOptions options,
+                  final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiGetResponse>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore

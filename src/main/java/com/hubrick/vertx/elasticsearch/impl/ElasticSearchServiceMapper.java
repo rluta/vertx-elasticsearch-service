@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.model.BulkResponseItem;
 import com.hubrick.vertx.elasticsearch.model.Hit;
 import com.hubrick.vertx.elasticsearch.model.Hits;
+import com.hubrick.vertx.elasticsearch.model.MultiGetResponseItem;
 import com.hubrick.vertx.elasticsearch.model.MultiSearchResponseItem;
 import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.Retries;
@@ -31,6 +32,7 @@ import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -158,21 +160,6 @@ public class ElasticSearchServiceMapper {
         return bulkResponse;
     }
 
-    public static com.hubrick.vertx.elasticsearch.model.MultiSearchResponse mapToMultiSearchResponse(MultiSearchResponse esMultiSearchResponse) {
-        final com.hubrick.vertx.elasticsearch.model.MultiSearchResponse multiSearchResponse = new com.hubrick.vertx.elasticsearch.model.MultiSearchResponse();
-
-        multiSearchResponse.setRawResponse(readResponse(esMultiSearchResponse));
-        multiSearchResponse.setResponses(
-                Arrays.asList(
-                        esMultiSearchResponse.getResponses()).stream()
-                        .map(e -> new MultiSearchResponseItem().setSearchResponse(mapToSearchResponse(e.getResponse())).setFailureMessage(e.getFailureMessage()))
-                        .collect(Collectors.toList()
-                )
-        );
-
-        return multiSearchResponse;
-    }
-
     public static BulkResponseItem mapToBulkItemResponse(org.elasticsearch.action.bulk.BulkItemResponse itemResponse) {
         final BulkResponseItem bulkItemResponse = new BulkResponseItem();
 
@@ -185,6 +172,44 @@ public class ElasticSearchServiceMapper {
         bulkItemResponse.setFailureMessage(itemResponse.getFailureMessage());
 
         return bulkItemResponse;
+    }
+
+    public static com.hubrick.vertx.elasticsearch.model.MultiSearchResponse mapToMultiSearchResponse(MultiSearchResponse esMultiSearchResponse) {
+        final com.hubrick.vertx.elasticsearch.model.MultiSearchResponse multiSearchResponse = new com.hubrick.vertx.elasticsearch.model.MultiSearchResponse();
+
+        multiSearchResponse.setRawResponse(readResponse(esMultiSearchResponse));
+        multiSearchResponse.setResponses(
+                Arrays.asList(
+                        esMultiSearchResponse.getResponses()).stream()
+                        .map(e -> new MultiSearchResponseItem().setSearchResponse(mapToSearchResponse(e.getResponse())).setFailureMessage(e.getFailureMessage()))
+                        .collect(Collectors.toList()
+                        )
+        );
+
+        return multiSearchResponse;
+    }
+
+
+    public static com.hubrick.vertx.elasticsearch.model.MultiGetResponse mapToMultiGetResponse(MultiGetResponse esMultiGetResponse) {
+        final com.hubrick.vertx.elasticsearch.model.MultiGetResponse multiGetResponse = new com.hubrick.vertx.elasticsearch.model.MultiGetResponse();
+
+        multiGetResponse.setRawResponse(readResponse(esMultiGetResponse));
+        multiGetResponse.setResponses(
+                Arrays.asList(
+                        esMultiGetResponse.getResponses()).stream()
+                        .map(e -> {
+                            final MultiGetResponseItem multiGetResponseItem = new MultiGetResponseItem().setId(e.getId()).setType(e.getType()).setIndex(e.getIndex()).setGetResult(mapToGetResult(e.getResponse()));
+                            if(e.getFailure() != null) {
+                                multiGetResponseItem.setFailureMessage(e.getFailure().getMessage());
+                            }
+
+                            return multiGetResponseItem;
+                        })
+                        .collect(Collectors.toList()
+                        )
+        );
+
+        return multiGetResponse;
     }
 
     public static com.hubrick.vertx.elasticsearch.model.SuggestResponse mapToSuggestResponse(SearchResponse esSuggestResponse) {
