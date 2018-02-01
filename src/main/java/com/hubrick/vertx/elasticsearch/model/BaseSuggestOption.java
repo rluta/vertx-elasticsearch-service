@@ -15,14 +15,13 @@
  */
 package com.hubrick.vertx.elasticsearch.model;
 
-import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Emir Dizdarevic
  * @since 1.0.0
  */
-@DataObject
 public abstract class BaseSuggestOption {
 
     private SuggestionType suggestionType;
@@ -67,5 +66,10 @@ public abstract class BaseSuggestOption {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("SuggestType " + jsonObject.getString(JSON_FIELD_SUGGESTION_TYPE) + " is not supported");
         }
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

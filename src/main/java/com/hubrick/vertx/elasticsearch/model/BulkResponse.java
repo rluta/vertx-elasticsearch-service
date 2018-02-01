@@ -27,31 +27,31 @@ import java.util.List;
  * @since 06.12.17
  */
 @DataObject
-public class BulkIndexResponse extends AbstractResponse<BulkIndexResponse> {
+public class BulkResponse extends AbstractRawResponse<BulkResponse> {
 
     public static final String JSON_FIELD_RESPONSES = "responses";
     public static final String JSON_FIELD_TOOK_IN_MILLIS = "tookInMillis";
 
-    private List<BulkItemResponse> responses = new LinkedList<>();
+    private List<BulkResponseItem> responses = new LinkedList<>();
     private Long tookInMillis;
 
-    public BulkIndexResponse() {
+    public BulkResponse() {
     }
 
-    public BulkIndexResponse(JsonObject json) {
+    public BulkResponse(JsonObject json) {
         super(json);
         final JsonArray jsonResponses = json.getJsonArray(JSON_FIELD_RESPONSES, new JsonArray());
         for (int i = 0; i < jsonResponses.size(); i++) {
-            this.responses.add(new BulkItemResponse(jsonResponses.getJsonObject(i)));
+            this.responses.add(new BulkResponseItem(jsonResponses.getJsonObject(i)));
         }
         this.tookInMillis = json.getLong(JSON_FIELD_TOOK_IN_MILLIS);
     }
 
-    public List<BulkItemResponse> getResponses() {
+    public List<BulkResponseItem> getResponses() {
         return responses;
     }
 
-    public void setResponses(final List<BulkItemResponse> responses) {
+    public void setResponses(final List<BulkResponseItem> responses) {
         this.responses = responses;
     }
 

@@ -15,51 +15,32 @@
  */
 package com.hubrick.vertx.elasticsearch.model;
 
+import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * @author sp@hubrick.com
- * @since 06.12.17
+ * Options for admin put template operations
  */
-public class BulkItemResponse {
+@DataObject
+public class TemplateOptions {
 
-    public static final String JSON_FIELD_ID = "id";
-    public static final String JSON_FIELD_SHARDS = "shards";
-
-    private String id;
-    private Shards shards;
-
-    public BulkItemResponse() {
+    public TemplateOptions() {
     }
 
-    public BulkItemResponse(JsonObject json)  {
-        this.id = json.getString(JSON_FIELD_ID);
-        this.shards = new Shards(json.getJsonObject(JSON_FIELD_SHARDS));
+    public TemplateOptions(TemplateOptions other) {
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(final String id) {
-        this.id = id;
-    }
-
-    public Shards getShards() {
-        return shards;
-    }
-
-    public void setShards(final Shards shards) {
-        this.shards = shards;
+    public TemplateOptions(JsonObject json) {
     }
 
     public JsonObject toJson() {
-
         final JsonObject json = new JsonObject();
-
-        if (id != null) json.put(JSON_FIELD_ID, id);
-        if (shards != null) json.put(JSON_FIELD_SHARDS, shards.toJson());
-
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

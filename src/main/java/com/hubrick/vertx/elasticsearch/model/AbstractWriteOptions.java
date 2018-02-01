@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Optional;
 
@@ -90,4 +91,8 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
         return json;
     }
 
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
+    }
 }

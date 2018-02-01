@@ -32,7 +32,7 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
     private String script;
     private ScriptType scriptType;
     private String scriptLang;
-    private JsonObject scriptParams;
+    private JsonObject scriptParams = new JsonObject();
     private List<String> fields = new ArrayList<>();
     private Integer retryOnConflict;
     private JsonObject doc;

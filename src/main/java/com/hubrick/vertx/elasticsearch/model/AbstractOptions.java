@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.elasticsearch.index.VersionType;
 
 import java.util.Optional;
@@ -23,7 +24,7 @@ import java.util.Optional;
 /**
  * Base options for all elasticsearch operations
  */
-public class AbstractOptions<T extends AbstractOptions<T>> {
+public abstract class AbstractOptions<T extends AbstractOptions<T>> {
 
     private String routing;
     private String parent;
@@ -105,4 +106,8 @@ public class AbstractOptions<T extends AbstractOptions<T>> {
         return (T) this;
     }
 
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
+    }
 }

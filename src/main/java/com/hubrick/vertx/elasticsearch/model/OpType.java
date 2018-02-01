@@ -15,29 +15,13 @@
  */
 package com.hubrick.vertx.elasticsearch.model;
 
-import io.vertx.codegen.annotations.DataObject;
-import io.vertx.core.json.JsonObject;
-
 /**
- * Index operation options
+ * @author Emir Dizdarevic
+ * @since 2.1.1
  */
-@DataObject
-public class BulkOptions extends AbstractWriteOptions<BulkOptions> {
-
-    public BulkOptions() {
-    }
-
-    public BulkOptions(BulkOptions other) {
-        super(other);
-    }
-
-    public BulkOptions(JsonObject json) {
-        super(json);
-    }
-
-    @Override
-    public JsonObject toJson() {
-        return super.toJson();
-    }
-
+public enum OpType {
+    INDEX,
+    CREATE,
+    UPDATE,
+    DELETE
 }

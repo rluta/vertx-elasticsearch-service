@@ -16,9 +16,9 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.index.VersionType;
 import org.junit.Test;
 
@@ -46,7 +46,7 @@ public class IndexOptionsTest {
         options1.setId("test_id")
                 .setRouting("routing")
                 .setParent("parent")
-                .setOpType(IndexRequest.OpType.CREATE)
+                .setOpType(OpType.CREATE)
                 .setRefresh(RefreshPolicy.IMMEDIATE)
                 .setVersion(2L)
                 .setVersionType(VersionType.EXTERNAL)

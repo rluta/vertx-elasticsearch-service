@@ -18,6 +18,7 @@ package com.hubrick.vertx.elasticsearch;
 import com.hubrick.vertx.elasticsearch.model.CreateIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.MappingOptions;
+import com.hubrick.vertx.elasticsearch.model.TemplateOptions;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.ProxyIgnore;
@@ -44,43 +45,47 @@ public interface ElasticSearchAdminService {
 
     @GenIgnore
     @ProxyIgnore
-    default void putMapping(String index, String type, JsonObject source, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void putMapping(String index, String type, JsonObject source, Handler<AsyncResult<Void>> resultHandler) {
         putMapping(Collections.singletonList(index), type, source, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void putMapping(String index, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void putMapping(String index, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<Void>> resultHandler) {
         putMapping(Collections.singletonList(index), type, source, options, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void putMapping(List<String> indices, String type, JsonObject source, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void putMapping(List<String> indices, String type, JsonObject source, Handler<AsyncResult<Void>> resultHandler) {
         putMapping(indices, type, source, null, resultHandler);
     }
 
-    void putMapping(List<String> indices, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void putMapping(List<String> indices, String type, JsonObject source, MappingOptions options, Handler<AsyncResult<Void>> resultHandler);
 
-    void createIndex(String index, JsonObject source, CreateIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void createIndex(String index, JsonObject source, CreateIndexOptions options, Handler<AsyncResult<Void>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteIndex(String index, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void deleteIndex(String index, Handler<AsyncResult<Void>> resultHandler) {
         deleteIndex(Collections.singletonList(index), new DeleteIndexOptions(), resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteIndex(String index, DeleteIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void deleteIndex(String index, DeleteIndexOptions options, Handler<AsyncResult<Void>> resultHandler) {
         deleteIndex(Collections.singletonList(index), options, resultHandler);
     }
 
     @GenIgnore
     @ProxyIgnore
-    default void deleteIndex(List<String> indices, Handler<AsyncResult<JsonObject>> resultHandler) {
+    default void deleteIndex(List<String> indices, Handler<AsyncResult<Void>> resultHandler) {
         deleteIndex(indices, new DeleteIndexOptions(), resultHandler);
     }
 
-    void deleteIndex(List<String> indices, DeleteIndexOptions options, Handler<AsyncResult<JsonObject>> resultHandler);
+    void deleteIndex(List<String> indices, DeleteIndexOptions options, Handler<AsyncResult<Void>> resultHandler);
+
+
+    void putTemplate(String name, JsonObject source, TemplateOptions options, Handler<AsyncResult<Void>> resultHandler);
+    void deleteTemplate(String name, TemplateOptions options, Handler<AsyncResult<Void>> resultHandler);
 }

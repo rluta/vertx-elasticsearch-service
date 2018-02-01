@@ -15,8 +15,11 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
-import com.hubrick.vertx.elasticsearch.model.BulkIndexResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkDeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkResponse;
+import com.hubrick.vertx.elasticsearch.model.BulkUpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse;
 import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
@@ -25,6 +28,10 @@ import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.GetResponse;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexResponse;
+import com.hubrick.vertx.elasticsearch.model.MultiGetOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
@@ -86,8 +93,6 @@ public interface ElasticSearchService {
      * @param resultHandler result handler callback
      */
     void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<IndexResponse>> resultHandler);
-
-    void bulkIndex(String index, String type, List<JsonObject> sources, BulkOptions options, Handler<AsyncResult<BulkIndexResponse>> resultHandler);
 
     /**
      * http://www.elastic.co/guide/en/elasticsearch/client/java-api/1.4/java-update-api.html
@@ -212,6 +217,49 @@ public interface ElasticSearchService {
      */
     void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<SuggestResponse>> resultHandler);
 
+    @GenIgnore
+    @ProxyIgnore
+    default void bulkIndex(final List<BulkIndexOptions> bulkIndexOptions, BulkOptions options, Handler<AsyncResult<BulkResponse>> resultHandler) {
+        bulk(bulkIndexOptions, Collections.emptyList(), Collections.emptyList(), options, resultHandler);
+    }
+
+    @GenIgnore
+    @ProxyIgnore
+    default void bulkUpdate(final List<BulkUpdateOptions> bulkUpdateOptions, BulkOptions options, Handler<AsyncResult<BulkResponse>> resultHandler) {
+        bulk(Collections.emptyList(), bulkUpdateOptions, Collections.emptyList(), options, resultHandler);
+    }
+
+    @GenIgnore
+    @ProxyIgnore
+    default void bulkDelete(final List<BulkDeleteOptions> bulkDeleteOptions, BulkOptions options, Handler<AsyncResult<BulkResponse>> resultHandler) {
+        bulk(Collections.emptyList(), Collections.emptyList(), bulkDeleteOptions, options, resultHandler);
+    }
+
+    void bulk(final List<BulkIndexOptions> bulkIndexOptions,
+              final List<BulkUpdateOptions> bulkUpdateOptions,
+              final List<BulkDeleteOptions> bulkDeleteOptions,
+              final BulkOptions bulkOptions,
+              final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkResponse>> resultHandler);
+
+    @GenIgnore
+    @ProxyIgnore
+    default void multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiSearchResponse>> resultHandler) {
+        multiSearch(multiSearchQueryOptions, new MultiSearchOptions(), resultHandler);
+    }
+
+    void multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions,
+                     final MultiSearchOptions options,
+                     final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiSearchResponse>> resultHandler);
+
+    @GenIgnore
+    @ProxyIgnore
+    default void multiGet(final List<MultiGetQueryOptions> multiGetQueryOptions, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiGetResponse>> resultHandler) {
+        multiGet(multiGetQueryOptions, new MultiGetOptions(), resultHandler);
+    }
+
+    void multiGet(final List<MultiGetQueryOptions> multiGetQueryOptions,
+                  final MultiGetOptions options,
+                  final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiGetResponse>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore

@@ -18,6 +18,7 @@ package com.hubrick.vertx.elasticsearch.model;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Sort option
@@ -27,7 +28,7 @@ public class ScriptFieldOption {
 
     private String script;
     private String lang;
-    private JsonObject params;
+    private JsonObject params = new JsonObject();
 
     public static final String JSON_FIELD_SCRIPT = "script";
     public static final String JSON_FIELD_LANG = "lang";
@@ -86,5 +87,10 @@ public class ScriptFieldOption {
                 .put(JSON_FIELD_SCRIPT, script)
                 .put(JSON_FIELD_LANG, lang)
                 .put(JSON_FIELD_PARAMS, params);
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

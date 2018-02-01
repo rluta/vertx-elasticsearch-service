@@ -16,6 +16,7 @@
 package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Search operation options
@@ -61,5 +62,10 @@ public abstract class AbstractResponse<T extends AbstractResponse<T>> {
 
     protected T returnThis() {
         return (T) this;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

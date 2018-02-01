@@ -15,6 +15,7 @@
  */
 package com.hubrick.vertx.elasticsearch.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.hubrick.vertx.elasticsearch.ElasticSearchConfigurator;
 import com.hubrick.vertx.elasticsearch.ElasticSearchService;
 import com.hubrick.vertx.elasticsearch.TransportClientFactory;
@@ -23,7 +24,10 @@ import com.hubrick.vertx.elasticsearch.model.AbstractSearchOptions;
 import com.hubrick.vertx.elasticsearch.model.AggregationOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSortOption;
 import com.hubrick.vertx.elasticsearch.model.BaseSuggestOption;
+import com.hubrick.vertx.elasticsearch.model.BulkDeleteOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkIndexOptions;
 import com.hubrick.vertx.elasticsearch.model.BulkOptions;
+import com.hubrick.vertx.elasticsearch.model.BulkUpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.Conflicts;
 import com.hubrick.vertx.elasticsearch.model.DeleteByQueryOptions;
@@ -31,6 +35,10 @@ import com.hubrick.vertx.elasticsearch.model.DeleteOptions;
 import com.hubrick.vertx.elasticsearch.model.FieldSortOption;
 import com.hubrick.vertx.elasticsearch.model.GetOptions;
 import com.hubrick.vertx.elasticsearch.model.IndexOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiGetQueryOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchOptions;
+import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.ScriptFieldOption;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
@@ -46,31 +54,84 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetRequestBuilder;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequestBuilder;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.ActiveShardCount;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.BoostingQueryBuilder;
+import org.elasticsearch.index.query.CommonTermsQueryBuilder;
+import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
+import org.elasticsearch.index.query.DisMaxQueryBuilder;
+import org.elasticsearch.index.query.ExistsQueryBuilder;
+import org.elasticsearch.index.query.FieldMaskingSpanQueryBuilder;
+import org.elasticsearch.index.query.FuzzyQueryBuilder;
+import org.elasticsearch.index.query.GeoBoundingBoxQueryBuilder;
+import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
+import org.elasticsearch.index.query.GeoPolygonQueryBuilder;
+import org.elasticsearch.index.query.GeoShapeQueryBuilder;
+import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.PrefixQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.ScriptQueryBuilder;
+import org.elasticsearch.index.query.SimpleQueryStringBuilder;
+import org.elasticsearch.index.query.SpanContainingQueryBuilder;
+import org.elasticsearch.index.query.SpanFirstQueryBuilder;
+import org.elasticsearch.index.query.SpanMultiTermQueryBuilder;
+import org.elasticsearch.index.query.SpanNearQueryBuilder;
+import org.elasticsearch.index.query.SpanNotQueryBuilder;
+import org.elasticsearch.index.query.SpanOrQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
+import org.elasticsearch.index.query.SpanWithinQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
+import org.elasticsearch.index.query.TermsSetQueryBuilder;
+import org.elasticsearch.index.query.TypeQueryBuilder;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.join.query.HasChildQueryBuilder;
+import org.elasticsearch.join.query.HasParentQueryBuilder;
+import org.elasticsearch.join.query.ParentIdQueryBuilder;
+import org.elasticsearch.percolator.PercolateQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -105,6 +166,7 @@ import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStat
 import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.ScriptSortBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
@@ -118,13 +180,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToBulkIndexResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteByQueryResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToDeleteResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToIndexResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToMultiGetResponse;
+import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToMultiSearchResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSearchResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSuggestResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToUpdateResponse;
-import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToBulkIndexResponse;
 
 /**
  * Default implementation of {@link ElasticSearchService}
@@ -136,7 +200,69 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     private final ElasticSearchConfigurator configurator;
     protected TransportClient client;
 
-    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+    private static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+    private static final NamedXContentRegistry DEFAULT_NAMED_X_CONTEXT_REGISTRY = new NamedXContentRegistry(
+            ImmutableList.<NamedXContentRegistry.Entry>builder()
+                    // Full text queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match_all"), MatchAllQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match"), MatchQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match_phrase"), MatchPhraseQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("match_phrase_prefix"), MatchPhrasePrefixQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("multi_match"), MultiMatchQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("common"), CommonTermsQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("query_string"), QueryStringQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("simple_query_string"), SimpleQueryStringBuilder::fromXContent))
+
+                    // Term level queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("term"), TermQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("terms"), TermsQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("terms_set"), TermsSetQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("range"), RangeQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("exists"), ExistsQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("prefix"), PrefixQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("wildcard"), WildcardQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("regexp"), RegexpQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("fuzzy"), FuzzyQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("type"), TypeQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("ids"), IdsQueryBuilder::fromXContent))
+
+                    // Compound queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("constant_score"), ConstantScoreQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("bool"), BoolQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("dis_max"), DisMaxQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("function_score"), FunctionScoreQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("boosting"), BoostingQueryBuilder::fromXContent))
+
+                    // Joining queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("nested"), NestedQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("has_child"), HasChildQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("has_parent"), HasParentQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("parent_id"), ParentIdQueryBuilder::fromXContent))
+
+                    // Geo queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_shape"), GeoShapeQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_bounding_box"), GeoBoundingBoxQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_distance"), GeoDistanceQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("geo_polygon"), GeoPolygonQueryBuilder::fromXContent))
+
+                    // Specialized queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("more_like_this"), MoreLikeThisQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("script"), ScriptQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("percolate"), PercolateQueryBuilder::fromXContent))
+
+                    // Span queries
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_term"), SpanTermQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_multi"), SpanMultiTermQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_first"), SpanFirstQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_near"), SpanNearQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_or"), SpanOrQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_not"), SpanNotQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_containing"), SpanContainingQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("span_within"), SpanWithinQueryBuilder::fromXContent))
+                    .add(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField("field_masking_span"), FieldMaskingSpanQueryBuilder::fromXContent))
+
+                    .build()
+    );
 
     @Inject
     public DefaultElasticSearchService(TransportClientFactory clientFactory, ElasticSearchConfigurator configurator) {
@@ -166,20 +292,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     public void index(String index, String type, JsonObject source, IndexOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.IndexResponse>> resultHandler) {
 
         final IndexRequestBuilder builder = client.prepareIndex(index, type).setSource(source.encode(), XContentType.JSON);
-
-        if (options != null) {
-            if (options.getId() != null) builder.setId(options.getId());
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getOpType() != null) builder.setOpType(options.getOpType());
-            if (options.getWaitForActiveShard() != null)
-                builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getRefreshPolicy() != null)
-                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-        }
+        populateIndexRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<IndexResponse>() {
             @Override
@@ -196,67 +309,10 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
-    public void bulkIndex(final String index, final String type, final List<JsonObject> sources, final BulkOptions options, final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkIndexResponse>> resultHandler) {
-        final BulkRequestBuilder builder = client.prepareBulk();
-
-        if (options != null) {
-            if (options.getWaitForActiveShard() != null) builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getRefreshPolicy() != null) builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-        }
-
-        for (final JsonObject source : sources) {
-            builder.add(client.prepareIndex(index,type).setSource(convertJsonObjectToMap(source)));
-        }
-
-        builder.execute(new ActionListener<BulkResponse>() {
-            @Override
-            public void onResponse(final BulkResponse bulkItemResponses) {
-                resultHandler.handle(Future.succeededFuture(mapToBulkIndexResponse(bulkItemResponses)));
-            }
-
-            @Override
-            public void onFailure(final Exception e) {
-                handleFailure(resultHandler, e);
-            }
-        });
-    }
-
-    @Override
     public void update(String index, String type, String id, UpdateOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.UpdateResponse>> resultHandler) {
 
-        UpdateRequestBuilder builder = client.prepareUpdate(index, type, id);
-
-        if (options != null) {
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getRefreshPolicy() != null)
-                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getWaitForActiveShard() != null)
-                builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-
-            if (options.getRetryOnConflict() != null) builder.setRetryOnConflict(options.getRetryOnConflict());
-            if (options.getDoc() != null) builder.setDoc(options.getDoc().encode());
-            if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode());
-            if (options.isDocAsUpsert() != null) builder.setDocAsUpsert(options.isDocAsUpsert());
-            if (options.isDetectNoop() != null) builder.setDetectNoop(options.isDetectNoop());
-            if (options.isScriptedUpsert() != null) builder.setScriptedUpsert(options.isScriptedUpsert());
-
-            if (options.getScript() != null) {
-                if (options.getScriptType() != null) {
-                    Map<String, Object> params = (options.getScriptParams() == null ? null : convertJsonObjectToMap(options.getScriptParams()));
-                    builder.setScript(new Script(options.getScriptType(), options.getScriptLang(), options.getScript(), params));
-                } else {
-                    builder.setScript(new Script(options.getScript()));
-                }
-            }
-            if (!options.getFields().isEmpty()) {
-                builder.setFields(options.getFields().toArray(new String[options.getFields().size()]));
-            }
-        }
+        final UpdateRequestBuilder builder = client.prepareUpdate(index, type, id);
+        populateUpdateRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<UpdateResponse>() {
             @Override
@@ -275,27 +331,8 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     @Override
     public void get(String index, String type, String id, GetOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.GetResponse>> resultHandler) {
 
-        GetRequestBuilder builder = client.prepareGet(index, type, id);
-
-        if (options != null) {
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.isRefresh() != null) builder.setRefresh(options.isRefresh());
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-
-            if (options.getPreference() != null) builder.setPreference(options.getPreference());
-            if (!options.getFields().isEmpty()) {
-                builder.setStoredFields(options.getFields().toArray(new String[options.getFields().size()]));
-            }
-            if (options.isFetchSource() != null) builder.setFetchSource(options.isFetchSource());
-            if (!options.getFetchSourceIncludes().isEmpty() || !options.getFetchSourceExcludes().isEmpty()) {
-                String[] includes = options.getFetchSourceIncludes().toArray(new String[options.getFetchSourceIncludes().size()]);
-                String[] excludes = options.getFetchSourceExcludes().toArray(new String[options.getFetchSourceExcludes().size()]);
-                builder.setFetchSource(includes, excludes);
-            }
-            if (options.isRealtime() != null) builder.setRealtime(options.isRealtime());
-        }
+        final GetRequestBuilder builder = client.prepareGet(index, type, id);
+        populateGetRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<GetResponse>() {
             @Override
@@ -332,7 +369,6 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         }
     }
 
-
     @Override
     public void searchScroll(String scrollId, SearchScrollOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SearchResponse>> resultHandler) {
         final SearchScrollRequestBuilder builder = client.prepareSearchScroll(scrollId);
@@ -359,16 +395,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     public void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.DeleteResponse>> resultHandler) {
 
         final DeleteRequestBuilder builder = client.prepareDelete(index, type, id);
-
-        if (options != null) {
-            if (options.getRouting() != null) builder.setRouting(options.getRouting());
-            if (options.getParent() != null) builder.setParent(options.getParent());
-            if (options.getRefreshPolicy() != null) builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
-            if (options.getWaitForActiveShard() != null) builder.setWaitForActiveShards(options.getWaitForActiveShard());
-            if (options.getVersion() != null) builder.setVersion(options.getVersion());
-            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
-            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
-        }
+        populateDeleteRequestBuilder(builder, options);
 
         builder.execute(new ActionListener<DeleteResponse>() {
             @Override
@@ -383,7 +410,6 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         });
 
     }
-
 
     @Override
     public void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SuggestResponse>> resultHandler) {
@@ -424,6 +450,151 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     }
 
     @Override
+    public void bulk(final List<BulkIndexOptions> bulkIndexOptions,
+                     final List<BulkUpdateOptions> bulkUpdateOptions,
+                     final List<BulkDeleteOptions> bulkDeleteOptions,
+                     final BulkOptions bulkOptions,
+                     final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.BulkResponse>> resultHandler) {
+        final BulkRequestBuilder builder = client.prepareBulk();
+
+        if (bulkOptions != null) {
+            if (bulkOptions.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(bulkOptions.getWaitForActiveShard());
+            if (bulkOptions.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(bulkOptions.getRefreshPolicy().name()));
+            if (bulkOptions.getTimeout() != null) builder.setTimeout(bulkOptions.getTimeout());
+        }
+
+        for (BulkIndexOptions bulkIndexOptionsItem : bulkIndexOptions) {
+            final IndexRequestBuilder indexRequestBuilder = client.prepareIndex(bulkIndexOptionsItem.getIndex(), bulkIndexOptionsItem.getType()).setSource(convertJsonObjectToMap(bulkIndexOptionsItem.getSource()));
+            populateIndexRequestBuilder(indexRequestBuilder, bulkIndexOptionsItem.getIndexOptions());
+            builder.add(indexRequestBuilder);
+        }
+
+        for (BulkUpdateOptions bulkUpdateOptionsItem : bulkUpdateOptions) {
+            final UpdateRequestBuilder updateBuilder = client.prepareUpdate(bulkUpdateOptionsItem.getIndex(), bulkUpdateOptionsItem.getType(), bulkUpdateOptionsItem.getId());
+            populateUpdateRequestBuilder(updateBuilder, bulkUpdateOptionsItem.getUpdateOptions());
+            builder.add(updateBuilder);
+        }
+
+        for (BulkDeleteOptions bulkDeleteOptionsItem : bulkDeleteOptions) {
+            final DeleteRequestBuilder deleteBuilder = client.prepareDelete(bulkDeleteOptionsItem.getIndex(), bulkDeleteOptionsItem.getType(), bulkDeleteOptionsItem.getId());
+            populateDeleteRequestBuilder(deleteBuilder, bulkDeleteOptionsItem.getDeleteOptions());
+            builder.add(deleteBuilder);
+        }
+
+        builder.execute(new ActionListener<BulkResponse>() {
+            @Override
+            public void onResponse(final BulkResponse bulkItemResponses) {
+                resultHandler.handle(Future.succeededFuture(mapToBulkIndexResponse(bulkItemResponses)));
+            }
+
+            @Override
+            public void onFailure(final Exception e) {
+                handleFailure(resultHandler, e);
+            }
+        });
+    }
+
+    @Override
+    public void multiSearch(final List<MultiSearchQueryOptions> multiSearchQueryOptions,
+                            final MultiSearchOptions options,
+                            final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiSearchResponse>> resultHandler) {
+
+        final MultiSearchRequestBuilder builder = client.prepareMultiSearch();
+
+        if (options != null) {
+            if (options.getMaxConcurrentSearchRequests() != null) {
+                builder.setMaxConcurrentSearchRequests(options.getMaxConcurrentSearchRequests());
+            }
+
+            if (options.getIndicesOptions() != null) {
+                final IndicesOptions defaultIndicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
+                builder.setIndicesOptions(
+                        IndicesOptions.fromOptions(
+                                Optional.ofNullable(options.getIndicesOptions().getIgnoreUnavailable()).orElse(defaultIndicesOptions.ignoreUnavailable()),
+                                Optional.ofNullable(options.getIndicesOptions().getAllowNoIndices()).orElse(defaultIndicesOptions.allowNoIndices()),
+                                Optional.ofNullable(options.getIndicesOptions().getExpandToOpenIndices()).orElse(defaultIndicesOptions.expandWildcardsOpen()),
+                                Optional.ofNullable(options.getIndicesOptions().getExpandToClosedIndices()).orElse(defaultIndicesOptions.expandWildcardsClosed()),
+                                Optional.ofNullable(options.getIndicesOptions().getAllowAliasesToMultipleIndices()).orElse(defaultIndicesOptions.allowAliasesToMultipleIndices()),
+                                Optional.ofNullable(options.getIndicesOptions().getForbidClosedIndices()).orElse(defaultIndicesOptions.forbidClosedIndices()),
+                                Optional.ofNullable(options.getIndicesOptions().getIgnoreAliases()).orElse(defaultIndicesOptions.ignoreAliases())
+                        )
+                );
+            }
+        }
+
+        for (MultiSearchQueryOptions multiSearchQueryOptionsItem : multiSearchQueryOptions) {
+            final SearchRequestBuilder searchRequestBuilder = client.prepareSearch(multiSearchQueryOptionsItem.getIndices().toArray(new String[0]));
+            populateSearchRequestBuilder(searchRequestBuilder, multiSearchQueryOptionsItem.getSearchOptions());
+            builder.add(searchRequestBuilder);
+        }
+
+
+        builder.execute(new ActionListener<MultiSearchResponse>() {
+            @Override
+            public void onResponse(final MultiSearchResponse multiSearchResponse) {
+                resultHandler.handle(Future.succeededFuture(mapToMultiSearchResponse(multiSearchResponse)));
+            }
+
+            @Override
+            public void onFailure(final Exception e) {
+                handleFailure(resultHandler, e);
+            }
+        });
+    }
+
+    @Override
+    public void multiGet(final List<MultiGetQueryOptions> multiGetQueryOptions,
+                         final MultiGetOptions options,
+                         final Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.MultiGetResponse>> resultHandler) {
+
+        final MultiGetRequestBuilder builder = client.prepareMultiGet();
+
+        if (options != null) {
+            if (options.getRefresh() != null) {
+                builder.setRefresh(options.getRefresh());
+            }
+            if (options.getRealtime() != null) {
+                builder.setRealtime(options.getRealtime());
+            }
+            if (options.getPreference() != null) {
+                builder.setPreference(options.getPreference());
+            }
+        }
+
+        for (MultiGetQueryOptions multiGetQueryOptionsItem : multiGetQueryOptions) {
+            final MultiGetRequest.Item item = new MultiGetRequest.Item(multiGetQueryOptionsItem.getIndex(), multiGetQueryOptionsItem.getType(), multiGetQueryOptionsItem.getId());
+            if (multiGetQueryOptionsItem.getParent() != null) item.parent(multiGetQueryOptionsItem.getParent());
+            if (multiGetQueryOptionsItem.getRouting() != null) item.routing(multiGetQueryOptionsItem.getRouting());
+            if (multiGetQueryOptionsItem.getStoredFields() != null) item.storedFields(multiGetQueryOptionsItem.getStoredFields().toArray(new String[0]));
+            if (multiGetQueryOptionsItem.getFetchSource() != null) {
+                item.fetchSourceContext(
+                        new FetchSourceContext(
+                                multiGetQueryOptionsItem.getFetchSource(),
+                                multiGetQueryOptionsItem.getFetchSourceIncludes().toArray(new String[0]),
+                                multiGetQueryOptionsItem.getFetchSourceExcludes().toArray(new String[0])
+                        )
+                );
+            }
+
+            builder.add(item);
+        }
+
+        builder.execute(new ActionListener<MultiGetResponse>() {
+            @Override
+            public void onResponse(final MultiGetResponse multiGetResponse) {
+                resultHandler.handle(Future.succeededFuture(mapToMultiGetResponse(multiGetResponse)));
+            }
+
+            @Override
+            public void onFailure(final Exception e) {
+                handleFailure(resultHandler, e);
+            }
+        });
+    }
+
+    @Override
     public void deleteByQuery(List<String> indices, DeleteByQueryOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.DeleteByQueryResponse>> resultHandler) {
         final DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE);
 
@@ -453,10 +624,96 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         });
     }
 
-
     @Override
     public TransportClient getClient() {
         return client;
+    }
+
+    private void populateIndexRequestBuilder(IndexRequestBuilder builder, IndexOptions options) {
+        if (options != null) {
+            if (options.getId() != null) builder.setId(options.getId());
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getOpType() != null)
+                builder.setOpType(DocWriteRequest.OpType.valueOf(options.getOpType().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+        }
+    }
+
+    private void populateGetRequestBuilder(GetRequestBuilder builder, GetOptions options) {
+        if (options != null) {
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getRefresh() != null) builder.setRefresh(options.getRefresh());
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+
+            if (options.getPreference() != null) builder.setPreference(options.getPreference());
+            if (!options.getFields().isEmpty()) {
+                builder.setStoredFields(options.getFields().toArray(new String[options.getFields().size()]));
+            }
+            if (options.getFetchSource() != null) builder.setFetchSource(options.getFetchSource());
+            if (!options.getFetchSourceIncludes().isEmpty() || !options.getFetchSourceExcludes().isEmpty()) {
+                String[] includes = options.getFetchSourceIncludes().toArray(new String[options.getFetchSourceIncludes().size()]);
+                String[] excludes = options.getFetchSourceExcludes().toArray(new String[options.getFetchSourceExcludes().size()]);
+                builder.setFetchSource(includes, excludes);
+            }
+            if (options.getRealtime() != null) builder.setRealtime(options.getRealtime());
+        }
+    }
+
+    private void populateDeleteRequestBuilder(DeleteRequestBuilder builder, DeleteOptions options) {
+        if (options != null) {
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+        }
+    }
+
+
+    private void populateUpdateRequestBuilder(UpdateRequestBuilder builder, UpdateOptions options) {
+        if (options != null) {
+            if (options.getRouting() != null) builder.setRouting(options.getRouting());
+            if (options.getParent() != null) builder.setParent(options.getParent());
+            if (options.getRefreshPolicy() != null)
+                builder.setRefreshPolicy(WriteRequest.RefreshPolicy.valueOf(options.getRefreshPolicy().name()));
+            if (options.getWaitForActiveShard() != null)
+                builder.setWaitForActiveShards(options.getWaitForActiveShard());
+            if (options.getVersion() != null) builder.setVersion(options.getVersion());
+            if (options.getVersionType() != null) builder.setVersionType(options.getVersionType());
+            if (options.getTimeout() != null) builder.setTimeout(options.getTimeout());
+
+            if (options.getRetryOnConflict() != null) builder.setRetryOnConflict(options.getRetryOnConflict());
+            if (options.getDoc() != null) builder.setDoc(options.getDoc().encode(), XContentType.JSON);
+            if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode(), XContentType.JSON);
+            if (options.isDocAsUpsert() != null) builder.setDocAsUpsert(options.isDocAsUpsert());
+            if (options.isDetectNoop() != null) builder.setDetectNoop(options.isDetectNoop());
+            if (options.isScriptedUpsert() != null) builder.setScriptedUpsert(options.isScriptedUpsert());
+
+            if (options.getScript() != null) {
+                if (options.getScriptType() != null) {
+                    Map<String, Object> params = (options.getScriptParams() == null ? null : convertJsonObjectToMap(options.getScriptParams()));
+                    builder.setScript(new Script(options.getScriptType(), options.getScriptLang(), options.getScript(), params));
+                } else {
+                    builder.setScript(new Script(options.getScript()));
+                }
+            }
+            if (!options.getFields().isEmpty()) {
+                builder.setFields(options.getFields().toArray(new String[options.getFields().size()]));
+            }
+        }
     }
 
     private void populateSearchRequestBuilder(SearchRequestBuilder builder, AbstractSearchOptions options) {
@@ -465,7 +722,8 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         }
         if (options.getSearchType() != null) builder.setSearchType(options.getSearchType());
         if (options.getScroll() != null) builder.setScroll(options.getScroll());
-        if (options.getTimeoutInMillis() != null) builder.setTimeout(TimeValue.timeValueMillis(options.getTimeoutInMillis()));
+        if (options.getTimeoutInMillis() != null)
+            builder.setTimeout(TimeValue.timeValueMillis(options.getTimeoutInMillis()));
         if (options.getTerminateAfter() != null) builder.setTerminateAfter(options.getTerminateAfter());
         if (options.getRouting() != null) builder.setRouting(options.getRouting());
         if (options.getPreference() != null) builder.setPreference(options.getPreference());
@@ -479,6 +737,24 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         if (options.isVersion() != null) builder.setVersion(options.isVersion());
         if (options.isFetchSource() != null) builder.setFetchSource(options.isFetchSource());
         if (options.isTrackScores() != null) builder.setTrackScores(options.isTrackScores());
+        if (!options.getStoredFields().isEmpty()) {
+            builder.storedFields((String[]) options.getStoredFields().toArray(new String[options.getTypes().size()]));
+        }
+
+        if (options.getIndicesOptions() != null) {
+            final IndicesOptions defaultIndicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
+            builder.setIndicesOptions(
+                    IndicesOptions.fromOptions(
+                            Optional.ofNullable(options.getIndicesOptions().getIgnoreUnavailable()).orElse(defaultIndicesOptions.ignoreUnavailable()),
+                            Optional.ofNullable(options.getIndicesOptions().getAllowNoIndices()).orElse(defaultIndicesOptions.allowNoIndices()),
+                            Optional.ofNullable(options.getIndicesOptions().getExpandToOpenIndices()).orElse(defaultIndicesOptions.expandWildcardsOpen()),
+                            Optional.ofNullable(options.getIndicesOptions().getExpandToClosedIndices()).orElse(defaultIndicesOptions.expandWildcardsClosed()),
+                            Optional.ofNullable(options.getIndicesOptions().getAllowAliasesToMultipleIndices()).orElse(defaultIndicesOptions.allowAliasesToMultipleIndices()),
+                            Optional.ofNullable(options.getIndicesOptions().getForbidClosedIndices()).orElse(defaultIndicesOptions.forbidClosedIndices()),
+                            Optional.ofNullable(options.getIndicesOptions().getIgnoreAliases()).orElse(defaultIndicesOptions.ignoreAliases())
+                    )
+            );
+        }
 
         if (!options.getSourceIncludes().isEmpty() || !options.getSourceExcludes().isEmpty()) {
             builder.setFetchSource(
@@ -564,13 +840,18 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
 
     /**
      * Convert recursively an AggregationOption in AggregationBuilder
+     *
      * @param aggregationOption the aggregation option to parse
      * @return the created aggregation builder if everything has been parsed correctly
      */
     private AggregationBuilder parseAggregation(AggregationOption aggregationOption) {
         try {
-            AggregationBuilder result = null;
-            XContentParser context = XContentType.JSON.xContent().createParser(NamedXContentRegistry.EMPTY, aggregationOption.getDefinition().encode());
+            final XContentParser context = XContentType.JSON.xContent().createParser(DEFAULT_NAMED_X_CONTEXT_REGISTRY, aggregationOption.getDefinition().encode());
+
+            // Skip START_OBJECT. The aggregation builders don't like it
+            context.nextToken();
+
+            final AggregationBuilder result;
             switch (aggregationOption.getType()) {
                 case TERMS:
                     result = TermsAggregationBuilder.parse(aggregationOption.getName(), context);

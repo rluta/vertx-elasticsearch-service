@@ -18,6 +18,7 @@ package com.hubrick.vertx.elasticsearch.model;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -72,5 +73,10 @@ public class Field {
         }
 
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

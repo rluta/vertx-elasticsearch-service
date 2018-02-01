@@ -50,6 +50,7 @@
         <when.version>4.1.1</when.version>
         <hamcrest.version>1.3</hamcrest.version>
         <junit.version>4.12</junit.version>
+        <commons-lang3.version>3.7</commons-lang3.version>
 
         <!--Vert.x codegen does not play nice with maven-compiler-plugin 3.2-->
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -87,6 +88,11 @@
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>transport</artifactId>
             <version>${es.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
         </dependency>
         <dependency>
             <groupId>com.englishtown.vertx</groupId>
@@ -150,7 +156,6 @@
             <version>${slf4j.version}</version>
             <scope>test</scope>
         </dependency>
-
 
         <!--Test dependencies-->
         <dependency>

@@ -17,6 +17,7 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Emir Dizdarevic
@@ -29,9 +30,9 @@ public class SuggestionEntryOption {
     private String highlight;
     private Float score;
 
-    public static final String JSON_FIELD_TEXT = "text";
-    public static final String JSON_FIELD_HIGHLIGHT = "highlight";
-    public static final String JSON_FIELD_SCORE = "score";
+    private static final String JSON_FIELD_TEXT = "text";
+    private static final String JSON_FIELD_HIGHLIGHT = "highlight";
+    private static final String JSON_FIELD_SCORE = "score";
 
     public SuggestionEntryOption() {
     }
@@ -84,5 +85,10 @@ public class SuggestionEntryOption {
         if (score != null) json.put(JSON_FIELD_SCORE, score);
 
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

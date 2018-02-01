@@ -17,6 +17,7 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Options for admin delete index operations
@@ -36,6 +37,11 @@ public class DeleteIndexOptions {
     public JsonObject toJson() {
         final JsonObject json = new JsonObject();
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 
 }
