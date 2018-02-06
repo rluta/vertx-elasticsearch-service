@@ -25,7 +25,7 @@ import java.util.Optional;
  * Multisearch operation options
  *
  * @author Emir Dizdarevic
- * @since 2.1.1
+ * @since 2.2.0
  */
 @DataObject
 public class MultiSearchOptions  {

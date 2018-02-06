@@ -23,7 +23,7 @@ import java.util.Optional;
 
 /**
  * @author Emir Dizdarevic
- * @since 2.1.1
+ * @since 2.2.0
  */
 @DataObject
 public class MultiGetResponseItem {
