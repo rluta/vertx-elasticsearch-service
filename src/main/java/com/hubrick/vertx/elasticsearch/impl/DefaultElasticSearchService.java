@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2016 Etaia AS (oss@hubrick.com)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,6 +71,7 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
@@ -168,12 +169,13 @@ import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationB
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.ScriptSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -200,7 +202,8 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
     private final ElasticSearchConfigurator configurator;
     protected TransportClient client;
 
-    private static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+    private static final String DEFAULT_SCRIPT_LANG = "painless";
+    private static final ScriptType DEFAULT_SCRIPT_TYPE = ScriptType.INLINE;
     private static final NamedXContentRegistry DEFAULT_NAMED_X_CONTEXT_REGISTRY = new NamedXContentRegistry(
             ImmutableList.<NamedXContentRegistry.Entry>builder()
                     // Full text queries
@@ -699,17 +702,13 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             if (options.getRetryOnConflict() != null) builder.setRetryOnConflict(options.getRetryOnConflict());
             if (options.getDoc() != null) builder.setDoc(options.getDoc().encode(), XContentType.JSON);
             if (options.getUpsert() != null) builder.setUpsert(options.getUpsert().encode(), XContentType.JSON);
-            if (options.isDocAsUpsert() != null) builder.setDocAsUpsert(options.isDocAsUpsert());
-            if (options.isDetectNoop() != null) builder.setDetectNoop(options.isDetectNoop());
-            if (options.isScriptedUpsert() != null) builder.setScriptedUpsert(options.isScriptedUpsert());
+            if (options.getDocAsUpsert() != null) builder.setDocAsUpsert(options.getDocAsUpsert());
+            if (options.getDetectNoop() != null) builder.setDetectNoop(options.getDetectNoop());
+            if (options.getScriptedUpsert() != null) builder.setScriptedUpsert(options.getScriptedUpsert());
 
             if (options.getScript() != null) {
-                if (options.getScriptType() != null) {
-                    Map<String, Object> params = (options.getScriptParams() == null ? null : convertJsonObjectToMap(options.getScriptParams()));
-                    builder.setScript(new Script(options.getScriptType(), options.getScriptLang(), options.getScript(), params));
-                } else {
-                    builder.setScript(new Script(options.getScript()));
-                }
+                builder.setScript(createScript(Optional.ofNullable(options.getScriptType()), Optional.ofNullable(options.getScriptLang()), Optional.ofNullable(options.getScriptParams()), options.getScript()));
+
             }
             if (!options.getFields().isEmpty()) {
                 builder.setFields(options.getFields().toArray(new String[options.getFields().size()]));
@@ -721,7 +720,7 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
         if (!options.getTypes().isEmpty()) {
             builder.setTypes((String[]) options.getTypes().toArray(new String[options.getTypes().size()]));
         }
-        if (options.getSearchType() != null) builder.setSearchType(options.getSearchType());
+        if (options.getSearchType() != null) builder.setSearchType(SearchType.valueOf(options.getSearchType().name()));
         if (options.getScroll() != null) builder.setScroll(options.getScroll());
         if (options.getTimeoutInMillis() != null)
             builder.setTimeout(TimeValue.timeValueMillis(options.getTimeoutInMillis()));
@@ -774,12 +773,12 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                 switch (baseSortOption.getSortType()) {
                     case FIELD:
                         final FieldSortOption fieldSortOption = (FieldSortOption) baseSortOption;
-                        builder.addSort(fieldSortOption.getField(), fieldSortOption.getOrder());
+                        builder.addSort(fieldSortOption.getField(), SortOrder.valueOf(fieldSortOption.getOrder().name()));
                         break;
                     case SCRIPT:
                         final ScriptSortOption scriptSortOption = (ScriptSortOption) baseSortOption;
-                        final Script script = new Script(ScriptType.INLINE, scriptSortOption.getLang(), scriptSortOption.getScript(), convertJsonObjectToMap(scriptSortOption.getParams()));
-                        final ScriptSortBuilder scriptSortBuilder = new ScriptSortBuilder(script, ScriptSortBuilder.ScriptSortType.fromString(scriptSortOption.getType().getValue())).order(scriptSortOption.getOrder());
+                        final Script script = createScript(Optional.ofNullable(scriptSortOption.getScriptType()), Optional.ofNullable(scriptSortOption.getLang()), Optional.ofNullable(scriptSortOption.getParams()), scriptSortOption.getScript());
+                        final ScriptSortBuilder scriptSortBuilder = new ScriptSortBuilder(script, ScriptSortBuilder.ScriptSortType.fromString(scriptSortOption.getType().getValue())).order(SortOrder.valueOf(scriptSortOption.getOrder().name()));
                         builder.addSort(scriptSortBuilder);
                         break;
                 }
@@ -790,10 +789,17 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             options.getScriptFields().forEach((scriptNameObject, scriptValueObject) -> {
                 final String scriptName = (String) scriptNameObject;
                 final ScriptFieldOption scriptValue = (ScriptFieldOption) scriptValueObject;
-                final Script script = new Script(ScriptType.INLINE, scriptValue.getLang(), scriptValue.getScript(), convertJsonObjectToMap(scriptValue.getParams()));
+                final Script script = createScript(Optional.ofNullable(scriptValue.getScriptType()), Optional.ofNullable(scriptValue.getLang()), Optional.ofNullable(scriptValue.getParams()), scriptValue.getScript());
                 builder.addScriptField(scriptName, script);
             });
         }
+    }
+
+    private Script createScript(Optional<com.hubrick.vertx.elasticsearch.model.ScriptType> type, Optional<String> lang, Optional<JsonObject> params, String script) {
+        final Map<String, Object> paramsMap = params.map(this::convertJsonObjectToMap).orElse(Collections.emptyMap());
+        final ScriptType scriptType = type.map(e -> ScriptType.valueOf(e.name())).orElse(DEFAULT_SCRIPT_TYPE);
+        final String scriptLang = lang.orElse(DEFAULT_SCRIPT_LANG);
+        return new Script(scriptType, scriptLang, script, paramsMap);
     }
 
     private <T> void handleFailure(final Handler<AsyncResult<T>> resultHandler, final Throwable t) {

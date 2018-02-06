@@ -17,7 +17,6 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.search.sort.SortOrder;
 
 /**
  * Sort option

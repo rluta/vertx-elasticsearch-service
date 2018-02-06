@@ -17,7 +17,8 @@ package com.hubrick.vertx.elasticsearch.model;
 
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+
+import java.util.Optional;
 
 /**
  * Sort option
@@ -33,9 +34,6 @@ public abstract class BaseSortOption {
     public static final String JSON_FIELD_SORT_TYPE = "sortType";
     public static final String JSON_FIELD_ORDER = "order";
 
-    private static final String ASC = "asc";
-    private static final String DESC = "desc";
-
     protected BaseSortOption(SortType sortSortType) {
         this.sortType = sortSortType;
     }
@@ -46,24 +44,8 @@ public abstract class BaseSortOption {
     }
 
     public BaseSortOption(JsonObject json) {
-        final String order = json.getString(JSON_FIELD_ORDER, ASC);
-
-        switch (order) {
-            case ASC:
-                this.order = SortOrder.ASC;
-                break;
-            case DESC:
-                this.order = SortOrder.DESC;
-                break;
-            default:
-                throw new IllegalArgumentException("Order " + order + " is not supported");
-        }
-
-        try {
-            sortType = SortType.valueOf(json.getString(JSON_FIELD_SORT_TYPE));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Type " + json.getString(JSON_FIELD_SORT_TYPE) + " is not supported");
-        }
+        this.order = Optional.ofNullable(json.getString(JSON_FIELD_ORDER)).map(SortOrder::valueOf).orElse(null);
+        this.sortType = Optional.ofNullable(json.getString(JSON_FIELD_SORT_TYPE)).map(SortType::valueOf).orElse(null);
     }
 
     public SortOrder getOrder() {
@@ -80,9 +62,12 @@ public abstract class BaseSortOption {
     }
 
     public JsonObject toJson() {
-        return new JsonObject()
-                .put(JSON_FIELD_ORDER, order.toString())
-                .put(JSON_FIELD_SORT_TYPE, sortType.name());
+        final JsonObject jsonObject = new JsonObject();
+
+        if(order != null) jsonObject.put(JSON_FIELD_ORDER, order.name());
+        if(sortType != null) jsonObject.put(JSON_FIELD_SORT_TYPE, sortType.name());
+
+        return jsonObject;
     }
 
     public static BaseSortOption parseJson(JsonObject jsonObject) {

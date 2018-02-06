@@ -656,6 +656,7 @@
 |[[lang]]`lang`|`String`|-
 |[[params]]`params`|`Json object`|-
 |[[script]]`script`|`String`|-
+|[[scriptType]]`scriptType`|`link:enums.html#ScriptType[ScriptType]`|-
 |===
 
 [[ScriptSortOption]]
@@ -674,6 +675,7 @@
 |[[order]]`order`|`link:enums.html#SortOrder[SortOrder]`|-
 |[[params]]`params`|`Json object`|-
 |[[script]]`script`|`String`|-
+|[[scriptType]]`scriptType`|`link:enums.html#ScriptType[ScriptType]`|-
 |[[sortType]]`sortType`|`link:enums.html#SortType[SortType]`|-
 |[[type]]`type`|`link:enums.html#Type[Type]`|-
 |===

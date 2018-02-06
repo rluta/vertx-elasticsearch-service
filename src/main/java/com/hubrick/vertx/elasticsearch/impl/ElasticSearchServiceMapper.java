@@ -230,8 +230,7 @@ public class ElasticSearchServiceMapper {
     public static com.hubrick.vertx.elasticsearch.model.SearchResponse mapToSearchResponse(SearchResponse esSearchResponse) {
         final com.hubrick.vertx.elasticsearch.model.SearchResponse searchResponse = new com.hubrick.vertx.elasticsearch.model.SearchResponse();
 
-        // searchResponse.setRawResponse(readResponse(esSearchResponse)); // crashes...
-        searchResponse.setRawResponse(new JsonObject(esSearchResponse.toString()));
+        searchResponse.setRawResponse(readResponse(esSearchResponse));
         searchResponse.setTook(esSearchResponse.getTook().getMillis());
         searchResponse.setTimedOut(esSearchResponse.isTimedOut());
         searchResponse.setShards(mapToShards(esSearchResponse));

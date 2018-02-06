@@ -20,6 +20,8 @@ import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.Optional;
+
 /**
  * Sort option
  */
@@ -27,10 +29,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class ScriptFieldOption {
 
     private String script;
+    private ScriptType scriptType;
     private String lang;
     private JsonObject params = new JsonObject();
 
     public static final String JSON_FIELD_SCRIPT = "script";
+    public static final String JSON_FIELD_SCRIPT_TYPE = "scriptType";
     public static final String JSON_FIELD_LANG = "lang";
     public static final String JSON_FIELD_PARAMS = "params";
 
@@ -39,12 +43,14 @@ public class ScriptFieldOption {
 
     public ScriptFieldOption(ScriptFieldOption other) {
         script = other.getScript();
+        scriptType = other.getScriptType();
         lang = other.getLang();
         params = other.getParams();
     }
 
     public ScriptFieldOption(JsonObject json) {
         script = json.getString(JSON_FIELD_SCRIPT);
+        scriptType = Optional.ofNullable(json.getString(JSON_FIELD_SCRIPT_TYPE)).map(ScriptType::valueOf).orElse(null);
         lang = json.getString(JSON_FIELD_LANG);
         params = json.getJsonObject(JSON_FIELD_PARAMS);
     }
@@ -55,6 +61,15 @@ public class ScriptFieldOption {
 
     public ScriptFieldOption setScript(String script) {
         this.script = script;
+        return this;
+    }
+
+    public ScriptType getScriptType() {
+        return scriptType;
+    }
+
+    public ScriptFieldOption setScriptType(ScriptType scriptType) {
+        this.scriptType = scriptType;
         return this;
     }
 
@@ -83,10 +98,15 @@ public class ScriptFieldOption {
     }
 
     public JsonObject toJson() {
-        return new JsonObject()
-                .put(JSON_FIELD_SCRIPT, script)
-                .put(JSON_FIELD_LANG, lang)
-                .put(JSON_FIELD_PARAMS, params);
+
+        final JsonObject jsonObject = new JsonObject();
+
+        if (script != null) jsonObject.put(JSON_FIELD_SCRIPT, script);
+        if (scriptType != null) jsonObject.put(JSON_FIELD_SCRIPT_TYPE, scriptType.name());
+        if (lang != null) jsonObject.put(JSON_FIELD_LANG, lang);
+        if (params != null) jsonObject.put(JSON_FIELD_PARAMS, params);
+
+        return jsonObject;
     }
 
     @Override

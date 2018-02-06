@@ -39,6 +39,8 @@ import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
+import com.hubrick.vertx.elasticsearch.model.SearchType;
+import com.hubrick.vertx.elasticsearch.model.SortOrder;
 import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -48,8 +50,6 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.rx.java.ObservableFuture;
 import io.vertx.rx.java.RxHelper;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.search.sort.SortOrder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -243,7 +243,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
 
         final Async async = testContext.async();
         SearchOptions options = new SearchOptions()
-                .setSearchType(SearchType.DEFAULT)
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
                 .setScroll("5m")
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 

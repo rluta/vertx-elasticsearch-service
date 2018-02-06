@@ -19,8 +19,6 @@ import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -139,9 +137,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
             }
         }
 
-        String s = json.getString(JSON_FIELD_SEARCH_TYPE);
-        if (s != null) searchType = SearchType.fromString(s);
-
+        searchType = Optional.ofNullable(json.getString(JSON_FIELD_SEARCH_TYPE)).map(SearchType::valueOf).orElse(null);
         JsonArray fieldSortOptionsJson = json.getJsonArray(JSON_FIELD_SORTS);
         if (fieldSortOptionsJson != null) {
             for (int i = 0; i < fieldSortOptionsJson.size(); i++) {
@@ -408,7 +404,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         final JsonObject json = new JsonObject();
 
         if (!types.isEmpty()) json.put(JSON_FIELD_TYPES, new JsonArray(types));
-        if (searchType != null) json.put(JSON_FIELD_SEARCH_TYPE, searchType.name().toLowerCase());
+        if (searchType != null) json.put(JSON_FIELD_SEARCH_TYPE, searchType.name());
         if (scroll != null) json.put(JSON_FIELD_SCROLL, scroll);
         if (timeoutInMillis != null) json.put(JSON_FIELD_TIMEOUT_IN_MILLIS, timeoutInMillis);
         if (terminateAfter != null) json.put(JSON_FIELD_TERMINATE_AFTER, terminateAfter);
