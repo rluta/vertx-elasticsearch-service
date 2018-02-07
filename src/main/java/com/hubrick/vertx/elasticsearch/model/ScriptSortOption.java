@@ -18,10 +18,10 @@ package com.hubrick.vertx.elasticsearch.model;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Sort option
@@ -30,11 +30,13 @@ import java.util.Map;
 public class ScriptSortOption extends BaseSortOption {
 
     private String script;
+    private ScriptType scriptType;
     private Type type;
     private String lang;
     private JsonObject params = new JsonObject();
 
     public static final String JSON_FIELD_SCRIPT = "script";
+    public static final String JSON_FIELD_SCRIPT_TYPE = "scriptType";
     public static final String JSON_FIELD_LANG = "lang";
     public static final String JSON_FIELD_TYPE = "type";
     public static final String JSON_FIELD_PARAMS = "params";
@@ -46,6 +48,7 @@ public class ScriptSortOption extends BaseSortOption {
     public ScriptSortOption(ScriptSortOption other) {
         super(other);
         script = other.getScript();
+        scriptType = other.getScriptType();
         lang = other.getLang();
         type = other.getType();
         params = other.getParams();
@@ -55,6 +58,7 @@ public class ScriptSortOption extends BaseSortOption {
         super(json);
 
         script = json.getString(JSON_FIELD_SCRIPT);
+        scriptType = Optional.ofNullable(json.getString(JSON_FIELD_SCRIPT_TYPE)).map(ScriptType::valueOf).orElse(null);
         lang = json.getString(JSON_FIELD_LANG);
         type = Type.fromString(json.getString(JSON_FIELD_TYPE));
         params = json.getJsonObject(JSON_FIELD_PARAMS);
@@ -66,6 +70,15 @@ public class ScriptSortOption extends BaseSortOption {
 
     public ScriptSortOption setScript(String script) {
         this.script = script;
+        return this;
+    }
+
+    public ScriptType getScriptType() {
+        return scriptType;
+    }
+
+    public ScriptSortOption setScriptType(ScriptType scriptType) {
+        this.scriptType = scriptType;
         return this;
     }
 
@@ -109,15 +122,14 @@ public class ScriptSortOption extends BaseSortOption {
     }
 
     public JsonObject toJson() {
-        final JsonObject baseJsonObject = super.toJson();
+        final JsonObject jsonObject = super.toJson();
 
-        final JsonObject jsonObject = new JsonObject()
-                .put(JSON_FIELD_SCRIPT, script)
-                .put(JSON_FIELD_LANG, lang)
-                .put(JSON_FIELD_TYPE, type.getValue())
-                .put(JSON_FIELD_PARAMS, params);
+        if(script != null) jsonObject.put(JSON_FIELD_SCRIPT, script);
+        if(lang != null) jsonObject.put(JSON_FIELD_LANG, lang);
+        if(type != null) jsonObject.put(JSON_FIELD_TYPE, type.getValue());
+        if(params != null) jsonObject.put(JSON_FIELD_PARAMS, params);
+        if(scriptType != null) jsonObject.put(JSON_FIELD_SCRIPT_TYPE, scriptType.name());
 
-        jsonObject.mergeIn(baseJsonObject);
         return jsonObject;
     }
 

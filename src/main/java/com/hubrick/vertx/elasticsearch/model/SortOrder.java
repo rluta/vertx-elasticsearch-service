@@ -19,9 +19,7 @@ package com.hubrick.vertx.elasticsearch.model;
  * @author Emir Dizdarevic
  * @since 2.2.0
  */
-public enum OpType {
-    INDEX,
-    CREATE,
-    UPDATE,
-    DELETE
+public enum SortOrder {
+    ASC,
+    DESC
 }

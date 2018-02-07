@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Emir Dizdarevic
- * @since 2.1.1
+ * @since 2.2.0
  */
 @DataObject
 public class MultiGetResponse extends AbstractRawResponse<MultiGetResponse> {

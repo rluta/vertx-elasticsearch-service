@@ -15,9 +15,9 @@
  */
 package com.hubrick.vertx.elasticsearch;
 
+import com.hubrick.vertx.elasticsearch.model.ScriptType;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.script.ScriptType;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

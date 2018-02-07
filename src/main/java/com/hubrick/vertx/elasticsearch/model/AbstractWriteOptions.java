@@ -48,7 +48,7 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
 
         refreshPolicy = Optional.ofNullable(json.getString(FIELD_REFRESH_POLICY)).map(RefreshPolicy::valueOf).orElse(null);
         timeout = json.getString(FIELD_TIMEOUT);
-        waitForActiveShard = Optional.ofNullable(json.getString(FIELD_WAIT_FOR_ACTIVE_SHARD)).map(Integer::valueOf).orElse(null);
+        waitForActiveShard = json.getInteger(FIELD_WAIT_FOR_ACTIVE_SHARD);
     }
 
     public RefreshPolicy getRefreshPolicy() {
@@ -84,7 +84,7 @@ public abstract class AbstractWriteOptions<T extends AbstractWriteOptions<T>> ex
 
         if (getRefreshPolicy() != null) json.put(FIELD_REFRESH_POLICY, getRefreshPolicy().name());
         if (getWaitForActiveShard() != null) {
-            json.put(FIELD_WAIT_FOR_ACTIVE_SHARD, getWaitForActiveShard().toString());
+            json.put(FIELD_WAIT_FOR_ACTIVE_SHARD, getWaitForActiveShard());
         }
         if (getTimeout() != null) json.put(FIELD_TIMEOUT, getTimeout());
 

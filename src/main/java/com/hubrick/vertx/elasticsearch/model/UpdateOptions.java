@@ -18,10 +18,10 @@ package com.hubrick.vertx.elasticsearch.model;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.script.ScriptType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Update operation options
@@ -53,9 +53,6 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
     public static final String FIELD_DETECT_NOOP = "detectNoop";
     public static final String FIELD_SCRIPTED_UPSERT = "scriptedUpsert";
 
-    private static final String SCRIPT_TYPE_INLINE = "inline";
-    private static final String SCRIPT_TYPE_STORED = "stored";
-
     public UpdateOptions() {
     }
 
@@ -70,9 +67,9 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
         retryOnConflict = other.getRetryOnConflict();
         doc = other.getDoc();
         upsert = other.getUpsert();
-        docAsUpsert = other.isDocAsUpsert();
-        detectNoop = other.isDetectNoop();
-        scriptedUpsert = other.isScriptedUpsert();
+        docAsUpsert = other.getDocAsUpsert();
+        detectNoop = other.getDetectNoop();
+        scriptedUpsert = other.getScriptedUpsert();
     }
 
     @SuppressWarnings("unchecked")
@@ -90,20 +87,7 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
         docAsUpsert = json.getBoolean(FIELD_DOC_AS_UPSERT);
         detectNoop = json.getBoolean(FIELD_DETECT_NOOP);
         scriptedUpsert = json.getBoolean(FIELD_SCRIPTED_UPSERT);
-
-        String s = json.getString(FIELD_SCRIPT_TYPE);
-        if (s != null) {
-            switch (s) {
-                case SCRIPT_TYPE_INLINE:
-                    scriptType = ScriptType.INLINE;
-                    break;
-                case SCRIPT_TYPE_STORED:
-                    scriptType = ScriptType.STORED;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unsupported script type: " + s);
-            }
-        }
+        scriptType = Optional.ofNullable(json.getString(FIELD_SCRIPT_TYPE)).map(ScriptType::valueOf).orElse(null);
     }
 
     public String getScript() {
@@ -174,7 +158,7 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
         return this;
     }
 
-    public Boolean isDocAsUpsert() {
+    public Boolean getDocAsUpsert() {
         return docAsUpsert;
     }
 
@@ -183,7 +167,7 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
         return this;
     }
 
-    public Boolean isDetectNoop() {
+    public Boolean getDetectNoop() {
         return detectNoop;
     }
 
@@ -192,7 +176,7 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
         return this;
     }
 
-    public Boolean isScriptedUpsert() {
+    public Boolean getScriptedUpsert() {
         return scriptedUpsert;
     }
 
@@ -203,7 +187,7 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
 
     @Override
     public JsonObject toJson() {
-        JsonObject json = super.toJson();
+        final JsonObject json = super.toJson();
 
         if (getScript() != null) json.put(FIELD_SCRIPT, getScript());
         if (getScriptLang() != null) json.put(FIELD_SCRIPT_LANG, getScriptLang());
@@ -212,10 +196,10 @@ public class UpdateOptions extends AbstractWriteOptions<UpdateOptions> {
         if (getRetryOnConflict() != null) json.put(FIELD_RETRY_ON_CONFLICT, getRetryOnConflict());
         if (getDoc() != null) json.put(FIELD_DOC, getDoc());
         if (getUpsert() != null) json.put(FIELD_UPSERT, getUpsert());
-        if (isDocAsUpsert() != null) json.put(FIELD_DOC_AS_UPSERT, isDocAsUpsert());
-        if (isDetectNoop() != null) json.put(FIELD_DETECT_NOOP, isDetectNoop());
-        if (isScriptedUpsert() != null) json.put(FIELD_SCRIPTED_UPSERT, isScriptedUpsert());
-        if (getScriptType() != null) json.put(FIELD_SCRIPT_TYPE, getScriptType().toString().toLowerCase());
+        if (getDocAsUpsert() != null) json.put(FIELD_DOC_AS_UPSERT, getDocAsUpsert());
+        if (getDetectNoop() != null) json.put(FIELD_DETECT_NOOP, getDetectNoop());
+        if (getScriptedUpsert() != null) json.put(FIELD_SCRIPTED_UPSERT, getScriptedUpsert());
+        if (getScriptType() != null) json.put(FIELD_SCRIPT_TYPE, getScriptType().name());
 
         return json;
     }

@@ -19,9 +19,9 @@ package com.hubrick.vertx.elasticsearch.model;
  * @author Emir Dizdarevic
  * @since 2.2.0
  */
-public enum OpType {
-    INDEX,
-    CREATE,
-    UPDATE,
-    DELETE
+public enum SearchType {
+    DFS_QUERY_THEN_FETCH,
+    QUERY_THEN_FETCH,
+    @Deprecated
+    QUERY_AND_FETCH
 }
