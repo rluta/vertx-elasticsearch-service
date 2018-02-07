@@ -181,9 +181,14 @@ public class ElasticSearchServiceMapper {
         multiSearchResponse.setResponses(
                 Arrays.asList(
                         esMultiSearchResponse.getResponses()).stream()
-                        .map(e -> new MultiSearchResponseItem().setSearchResponse(mapToSearchResponse(e.getResponse())).setFailureMessage(e.getFailureMessage()))
-                        .collect(Collectors.toList()
-                        )
+                        .map(e -> {
+                            final MultiSearchResponseItem multiSearchResponseItem = new MultiSearchResponseItem().setFailureMessage(e.getFailureMessage());
+                            if(e.getResponse() != null) {
+                                multiSearchResponseItem.setSearchResponse(mapToSearchResponse(e.getResponse()));
+                            }
+
+                            return multiSearchResponseItem;
+                        }).collect(Collectors.toList())
         );
 
         return multiSearchResponse;
@@ -198,8 +203,11 @@ public class ElasticSearchServiceMapper {
                 Arrays.asList(
                         esMultiGetResponse.getResponses()).stream()
                         .map(e -> {
-                            final MultiGetResponseItem multiGetResponseItem = new MultiGetResponseItem().setId(e.getId()).setType(e.getType()).setIndex(e.getIndex()).setGetResult(mapToGetResult(e.getResponse()));
-                            if(e.getFailure() != null) {
+                            final MultiGetResponseItem multiGetResponseItem = new MultiGetResponseItem().setId(e.getId()).setType(e.getType()).setIndex(e.getIndex());
+                            if(e.getResponse() != null) {
+                                multiGetResponseItem.setGetResult(mapToGetResult(e.getResponse()));
+                            }
+                            if (e.getFailure() != null) {
                                 multiGetResponseItem.setFailureMessage(e.getFailure().getMessage());
                             }
 
@@ -426,7 +434,6 @@ public class ElasticSearchServiceMapper {
             }
 
             return new JsonObject(builder.string());
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
