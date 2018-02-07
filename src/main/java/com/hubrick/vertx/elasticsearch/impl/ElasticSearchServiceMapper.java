@@ -416,17 +416,20 @@ public class ElasticSearchServiceMapper {
 
     protected static JsonObject readResponse(ToXContent toXContent) {
         try {
-            final XContentBuilder builder = XContentFactory.jsonBuilder();
-            if (toXContent.isFragment()) {
-                builder.startObject();
-                toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
-                builder.endObject();
+            if(toXContent != null) {
+                final XContentBuilder builder = XContentFactory.jsonBuilder();
+                if (toXContent.isFragment()) {
+                    builder.startObject();
+                    toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
+                    builder.endObject();
+                } else {
+                    toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
+                }
+
+                return new JsonObject(builder.string());
             } else {
-                toXContent.toXContent(builder, SearchResponse.EMPTY_PARAMS);
+                return new JsonObject();
             }
-
-            return new JsonObject(builder.string());
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
