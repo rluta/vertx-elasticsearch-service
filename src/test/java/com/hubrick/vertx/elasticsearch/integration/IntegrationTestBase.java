@@ -37,10 +37,12 @@ import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.OpType;
 import com.hubrick.vertx.elasticsearch.model.RefreshPolicy;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
+import com.hubrick.vertx.elasticsearch.model.ScriptType;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchType;
 import com.hubrick.vertx.elasticsearch.model.SortOrder;
+import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -129,7 +131,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     public void testIndex(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        JsonObject source = new JsonObject()
+        final JsonObject source = new JsonObject()
                 .put("user", source_user)
                 .put("message", source_message)
                 .put("obj", new JsonObject()
@@ -137,7 +139,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("1")
                                 .add("2")));
 
-        IndexOptions options = new IndexOptions().setId(id);
+        final IndexOptions options = new IndexOptions().setId(id);
         rxService.index(index, type, source, options)
                 .subscribe(
                         indexResponse -> {
@@ -158,7 +160,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     public void testGet(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        JsonObject source = new JsonObject()
+        final JsonObject source = new JsonObject()
                 .put("user", source_user)
                 .put("message", source_message)
                 .put("obj", new JsonObject()
@@ -166,7 +168,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("1")
                                 .add("2")));
 
-        IndexOptions options = new IndexOptions().setId(id);
+        final IndexOptions options = new IndexOptions().setId(id);
         rxService.index(index, type, source, options)
                 .flatMap(indexResponse -> rxService.get(index, type, id))
                 .subscribe(
@@ -188,7 +190,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void testSearch(TestContext testContext) throws Exception {
+    public void testUpdate(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         JsonObject source = new JsonObject()
@@ -199,7 +201,44 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("1")
                                 .add("2")));
 
-        IndexOptions indexOptions = new IndexOptions().setId(id);
+        final IndexOptions options = new IndexOptions().setId(id);
+        rxService.index(index, type, source, options)
+                .flatMap(indexResponse -> {
+                    final UpdateOptions updateOptions = new UpdateOptions().setScript("ctx._source.message = 'updated message'", ScriptType.INLINE);
+                    return rxService.update(index, type, id, updateOptions);
+                })
+                .flatMap(updateResponse -> rxService.get(index, type, id))
+                .subscribe(
+                        getResponse -> {
+                            assertThat(testContext, getResponse.getResult().getIndex(), is(index));
+                            assertThat(testContext, getResponse.getResult().getType(), is(type));
+                            assertThat(testContext, getResponse.getResult().getId(), is(id));
+                            assertThat(testContext, getResponse.getResult().getExists(), is(true));
+                            assertThat(testContext, getResponse.getResult().getVersion(), greaterThan(0l));
+
+                            assertThat(testContext, getResponse.getResult().getSource(), notNullValue());
+                            assertThat(testContext, getResponse.getResult().getSource().getString("user"), is(source_user));
+                            assertThat(testContext, getResponse.getResult().getSource().getString("message"), is("updated message"));
+
+                            async.complete();
+                        },
+                        error -> testContext.fail(error)
+                );
+    }
+
+    @Test
+    public void testSearch(TestContext testContext) throws Exception {
+
+        final Async async = testContext.async();
+        final JsonObject source = new JsonObject()
+                .put("user", source_user)
+                .put("message", source_message)
+                .put("obj", new JsonObject()
+                        .put("array", new JsonArray()
+                                .add("1")
+                                .add("2")));
+
+        final IndexOptions indexOptions = new IndexOptions().setId(id);
         rxService.index(index, type, source, indexOptions)
                 .flatMap(indexResponse -> {
                     final ObservableFuture<IndexResponse> observableFuture = RxHelper.observableFuture();
@@ -241,12 +280,12 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     public void testScroll(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        SearchOptions options = new SearchOptions()
+        final SearchOptions options = new SearchOptions()
                 .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
                 .setScroll("5m")
                 .setQuery(new JsonObject().put("match_all", new JsonObject()));
 
-        JsonObject source = new JsonObject()
+        final JsonObject source = new JsonObject()
                 .put("user", source_user)
                 .put("message", source_message)
                 .put("obj", new JsonObject()
@@ -255,7 +294,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("2")));
 
         final UUID documentId = UUID.randomUUID();
-        IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
+        final IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
 
         rxService.index(index, type, source, indexOptions)
                 .flatMap(indexResponse -> {
@@ -323,7 +362,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     public void testDeleteByQuery_Simple(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        JsonObject source = new JsonObject()
+        final JsonObject source = new JsonObject()
                 .put("user", source_user)
                 .put("message", source_message)
                 .put("obj", new JsonObject()
@@ -332,7 +371,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("2")));
 
         final UUID documentId = UUID.randomUUID();
-        IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
+        final IndexOptions indexOptions = new IndexOptions().setId(documentId.toString());
 
         rxService.index(index, type, source, indexOptions)
                 .flatMap(result -> {
@@ -409,7 +448,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     public void testMultiSearch(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        JsonObject source = new JsonObject()
+        final JsonObject source = new JsonObject()
                 .put("user", source_user)
                 .put("message", source_message)
                 .put("obj", new JsonObject()
@@ -417,7 +456,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("1")
                                 .add("2")));
 
-        IndexOptions indexOptions = new IndexOptions().setId(id);
+        final IndexOptions indexOptions = new IndexOptions().setId(id);
         rxService.index(index, type, source, indexOptions)
                 .flatMap(indexResponse -> {
                     final ObservableFuture<IndexResponse> observableFuture = RxHelper.observableFuture();
@@ -462,7 +501,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     public void testMultiGet(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
-        JsonObject source = new JsonObject()
+        final JsonObject source = new JsonObject()
                 .put("user", source_user)
                 .put("message", source_message)
                 .put("obj", new JsonObject()
@@ -470,7 +509,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                                 .add("1")
                                 .add("2")));
 
-        IndexOptions options = new IndexOptions().setId(id);
+        final IndexOptions options = new IndexOptions().setId(id);
         rxService.index(index, type, source, options)
                 .flatMap(indexResponse -> rxService.multiGet(ImmutableList.of(new MultiGetQueryOptions().setId(id).setIndex(index).setType(type).setFetchSource(true))))
                 .subscribe(
