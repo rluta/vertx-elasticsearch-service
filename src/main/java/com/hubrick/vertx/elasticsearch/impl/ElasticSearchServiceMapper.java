@@ -220,21 +220,6 @@ public class ElasticSearchServiceMapper {
         return multiGetResponse;
     }
 
-    public static com.hubrick.vertx.elasticsearch.model.SuggestResponse mapToSuggestResponse(SearchResponse esSuggestResponse) {
-        final com.hubrick.vertx.elasticsearch.model.SuggestResponse searchResponse = new com.hubrick.vertx.elasticsearch.model.SuggestResponse();
-
-        searchResponse.setRawResponse(new JsonObject(esSuggestResponse.toString()));
-        searchResponse.setShards(mapToShards(esSuggestResponse));
-
-        if (esSuggestResponse.getSuggest() != null) {
-            for (Suggest.Suggestion<?> entries : esSuggestResponse.getSuggest()) {
-                searchResponse.addSuggestion(entries.getName(), mapToSuggestion(entries));
-            }
-        }
-
-        return searchResponse;
-    }
-
     public static com.hubrick.vertx.elasticsearch.model.SearchResponse mapToSearchResponse(SearchResponse esSearchResponse) {
         final com.hubrick.vertx.elasticsearch.model.SearchResponse searchResponse = new com.hubrick.vertx.elasticsearch.model.SearchResponse();
 

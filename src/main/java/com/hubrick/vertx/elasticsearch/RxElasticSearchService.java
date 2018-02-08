@@ -38,8 +38,6 @@ import com.hubrick.vertx.elasticsearch.model.MultiSearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestResponse;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 import io.vertx.core.Vertx;
@@ -100,20 +98,6 @@ public interface RxElasticSearchService {
     }
 
     Observable<DeleteResponse> delete(String index, String type, String id, DeleteOptions options);
-
-    default Observable<SuggestResponse> suggest(String index, SuggestOptions options) {
-        return suggest(Collections.singletonList(index), options);
-    }
-
-    default Observable<SuggestResponse> suggest(String index) {
-        return suggest(Collections.singletonList(index), new SuggestOptions());
-    }
-
-    default Observable<SuggestResponse> suggest(List<String> indices) {
-        return suggest(indices, new SuggestOptions());
-    }
-
-    Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options);
 
     default Observable<BulkResponse> bulkIndex(final List<BulkIndexOptions> bulkIndexOptions, BulkOptions options) {
         return bulk(bulkIndexOptions, Collections.emptyList(), Collections.emptyList(), options);

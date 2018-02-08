@@ -39,8 +39,6 @@ import com.hubrick.vertx.elasticsearch.model.MultiSearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestResponse;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 import io.vertx.core.json.JsonObject;
@@ -105,13 +103,6 @@ public class DefaultRxElasticSearchService implements RxElasticSearchService {
     public Observable<DeleteResponse> delete(String index, String type, String id, DeleteOptions options) {
         final ObservableFuture<DeleteResponse> observableFuture = RxHelper.observableFuture();
         elasticSearchService.delete(index, type, id, options, observableFuture.toHandler());
-        return observableFuture;
-    }
-
-    @Override
-    public Observable<SuggestResponse> suggest(List<String> indices, SuggestOptions options) {
-        final ObservableFuture<SuggestResponse> observableFuture = RxHelper.observableFuture();
-        elasticSearchService.suggest(indices, options, observableFuture.toHandler());
         return observableFuture;
     }
 

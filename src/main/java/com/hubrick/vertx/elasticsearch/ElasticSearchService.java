@@ -35,8 +35,6 @@ import com.hubrick.vertx.elasticsearch.model.MultiSearchQueryOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchResponse;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestResponse;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import com.hubrick.vertx.elasticsearch.model.UpdateResponse;
 import io.vertx.codegen.annotations.GenIgnore;
@@ -189,33 +187,6 @@ public interface ElasticSearchService {
      * @param resultHandler result handler callback
      */
     void delete(String index, String type, String id, DeleteOptions options, Handler<AsyncResult<DeleteResponse>> resultHandler);
-
-    @GenIgnore
-    @ProxyIgnore
-    default void suggest(String index, SuggestOptions options, Handler<AsyncResult<SuggestResponse>> resultHandler) {
-        suggest(Collections.singletonList(index), options, resultHandler);
-    }
-
-    @GenIgnore
-    @ProxyIgnore
-    default void suggest(String index, Handler<AsyncResult<SuggestResponse>> resultHandler) {
-        suggest(Collections.singletonList(index), new SuggestOptions(), resultHandler);
-    }
-
-    @GenIgnore
-    @ProxyIgnore
-    default void suggest(List<String> indices, Handler<AsyncResult<SuggestResponse>> resultHandler) {
-        suggest(indices, new SuggestOptions(), resultHandler);
-    }
-
-    /**
-     * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters.html
-     *
-     * @param indices       the index names
-     * @param options       optional suggest options
-     * @param resultHandler result handler callback
-     */
-    void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<SuggestResponse>> resultHandler);
 
     @GenIgnore
     @ProxyIgnore

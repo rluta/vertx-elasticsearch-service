@@ -43,7 +43,6 @@ import com.hubrick.vertx.elasticsearch.model.ScriptFieldOption;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
-import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 import com.hubrick.vertx.elasticsearch.model.UpdateOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -189,7 +188,6 @@ import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.ma
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToMultiGetResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToMultiSearchResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSearchResponse;
-import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToSuggestResponse;
 import static com.hubrick.vertx.elasticsearch.impl.ElasticSearchServiceMapper.mapToUpdateResponse;
 
 /**
@@ -412,44 +410,6 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
             }
         });
 
-    }
-
-    @Override
-    public void suggest(List<String> indices, SuggestOptions options, Handler<AsyncResult<com.hubrick.vertx.elasticsearch.model.SuggestResponse>> resultHandler) {
-
-        final SearchRequestBuilder builder = client.prepareSearch(indices.toArray(new String[indices.size()]));
-
-        if (options != null && !options.getSuggestions().isEmpty()) {
-            for (Map.Entry<String, BaseSuggestOption> suggestOptionEntry : options.getSuggestions().entrySet()) {
-                switch (suggestOptionEntry.getValue().getSuggestionType()) {
-                    case COMPLETION:
-                        final CompletionSuggestOption completionSuggestOption = (CompletionSuggestOption) suggestOptionEntry.getValue();
-                        final CompletionSuggestionBuilder completionBuilder = new CompletionSuggestionBuilder(completionSuggestOption.getField());
-                        if (completionSuggestOption.getText() != null) {
-                            completionBuilder.text(completionSuggestOption.getText());
-                        }
-                        if (completionSuggestOption.getSize() != null) {
-                            completionBuilder.size(completionSuggestOption.getSize());
-                        }
-
-                        builder.suggest(new SuggestBuilder().addSuggestion(suggestOptionEntry.getKey(), completionBuilder));
-                        break;
-                }
-            }
-        }
-
-        builder.execute(new ActionListener<SearchResponse>() {
-
-            @Override
-            public void onResponse(SearchResponse suggestResponse) {
-                resultHandler.handle(Future.succeededFuture(mapToSuggestResponse(suggestResponse)));
-            }
-
-            @Override
-            public void onFailure(Exception t) {
-                handleFailure(resultHandler, t);
-            }
-        });
     }
 
     @Override
@@ -792,6 +752,23 @@ public class DefaultElasticSearchService implements InternalElasticSearchService
                 final Script script = createScript(Optional.ofNullable(scriptValue.getScriptType()), Optional.ofNullable(scriptValue.getLang()), Optional.ofNullable(scriptValue.getParams()), scriptValue.getScript());
                 builder.addScriptField(scriptName, script);
             });
+        }
+
+        for (Map.Entry<String, BaseSuggestOption> suggestOptionEntry : ((Map<String, BaseSuggestOption>) options.getSuggestions()).entrySet()) {
+            switch (suggestOptionEntry.getValue().getSuggestionType()) {
+                case COMPLETION:
+                    final CompletionSuggestOption completionSuggestOption = (CompletionSuggestOption) suggestOptionEntry.getValue();
+                    final CompletionSuggestionBuilder completionBuilder = new CompletionSuggestionBuilder(completionSuggestOption.getField());
+                    if (completionSuggestOption.getText() != null) {
+                        completionBuilder.text(completionSuggestOption.getText());
+                    }
+                    if (completionSuggestOption.getSize() != null) {
+                        completionBuilder.size(completionSuggestOption.getSize());
+                    }
+
+                    builder.suggest(new SuggestBuilder().addSuggestion(suggestOptionEntry.getKey(), completionBuilder));
+                    break;
+            }
         }
     }
 

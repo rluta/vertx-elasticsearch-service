@@ -41,7 +41,6 @@ import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchScrollOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchType;
 import com.hubrick.vertx.elasticsearch.model.SortOrder;
-import com.hubrick.vertx.elasticsearch.model.SuggestOptions;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -283,7 +282,7 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
     }
 
     @Test
-    public void testSuggest(TestContext testContext) throws Exception {
+    public void testSearch_Suggest(TestContext testContext) throws Exception {
 
         final Async async = testContext.async();
         final JsonObject source = new JsonObject()
@@ -298,21 +297,21 @@ public abstract class IntegrationTestBase extends AbstractVertxIntegrationTest {
                     return observableFuture;
                 })
                 .flatMap(aVoid -> {
-                    final SuggestOptions options = new SuggestOptions();
+                    final SearchOptions options = new SearchOptions();
                     final CompletionSuggestOption completionSuggestOption = new CompletionSuggestOption()
                             .setText("v")
                             .setField("message_suggest");
                     options.addSuggestion("test-suggest", completionSuggestOption);
 
-                    return rxService.suggest(index, options);
+                    return rxService.search(index, options);
                 })
                 .subscribe(
-                        suggestResponse -> {
-                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest"), notNullValue());
-                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getSize(), is(1));
-                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getEntries().get(0), notNullValue());
-                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getEntries().get(0).getLength(), is(1));
-                            assertThat(testContext, suggestResponse.getSuggestions().get("test-suggest").getEntries().get(0).getOptions().get(0).getText(), is(source_message));
+                        searchResponse -> {
+                            assertThat(testContext, searchResponse.getSuggestions().get("test-suggest"), notNullValue());
+                            assertThat(testContext, searchResponse.getSuggestions().get("test-suggest").getSize(), is(1));
+                            assertThat(testContext, searchResponse.getSuggestions().get("test-suggest").getEntries().get(0), notNullValue());
+                            assertThat(testContext, searchResponse.getSuggestions().get("test-suggest").getEntries().get(0).getLength(), is(1));
+                            assertThat(testContext, searchResponse.getSuggestions().get("test-suggest").getEntries().get(0).getOptions().get(0).getText(), is(source_message));
 
                             async.complete();
                         },

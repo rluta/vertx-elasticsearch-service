@@ -16,6 +16,8 @@
 package com.hubrick.vertx.elasticsearch;
 
 import com.google.common.collect.ImmutableList;
+import com.hubrick.vertx.elasticsearch.model.AggregationOption;
+import com.hubrick.vertx.elasticsearch.model.CompletionSuggestOption;
 import com.hubrick.vertx.elasticsearch.model.ScriptSortOption;
 import com.hubrick.vertx.elasticsearch.model.SearchOptions;
 import com.hubrick.vertx.elasticsearch.model.SearchType;
@@ -59,7 +61,8 @@ public class SearchOptionsTest {
                 .setFetchSource(true)
                 .setSourceIncludes(Arrays.asList("field1", "field2"))
                 .setTrackScores(true)
-                //.addAggregation(AggregationBuilders.terms("name"))
+                .addAggregation(new AggregationOption().setName("agg1").setType(AggregationOption.AggregationType.TERMS).setDefinition( new JsonObject().put("field", "field1").put("size", 1)))
+                .addSuggestion("name", new CompletionSuggestOption().setField("field").setText("text").setSize(10))
                 .addFieldSort("status", SortOrder.ASC)
                 .addFieldSort("insert_date", SortOrder.ASC)
                 .addScripSort("doc['score']", ScriptSortOption.Type.NUMBER, new JsonObject(), SortOrder.ASC)

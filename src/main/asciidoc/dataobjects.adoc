@@ -769,36 +769,6 @@
 |[[total]]`total`|`Number (Integer)`|-
 |===
 
-[[SuggestOptions]]
-== SuggestOptions
-
-++++
-++++
-'''
-
-[cols=">25%,^25%,50%"]
-[frame="topbot"]
-|===
-^|Name | Type ^| Description
-|[[parent]]`parent`|`String`|-
-|[[routing]]`routing`|`String`|-
-|[[version]]`version`|`Number (Long)`|-
-|[[versionType]]`versionType`|`link:enums.html#VersionType[VersionType]`|-
-|===
-
-[[SuggestResponse]]
-== SuggestResponse
-
-
-[cols=">25%,^25%,50%"]
-[frame="topbot"]
-|===
-^|Name | Type ^| Description
-|[[rawResponse]]`rawResponse`|`Json object`|-
-|[[shards]]`shards`|`link:dataobjects.html#Shards[Shards]`|-
-|[[suggestions]]`suggestions`|`link:dataobjects.html#Suggestion[Suggestion]`|-
-|===
-
 [[Suggestion]]
 == Suggestion
 

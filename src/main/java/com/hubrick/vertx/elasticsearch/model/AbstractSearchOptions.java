@@ -54,6 +54,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     private Map<String, ScriptFieldOption> scriptFields = new HashMap<>();
     private List<String> storedFields = new ArrayList<>();
     private IndicesOptions indicesOptions;
+    private Map<String, BaseSuggestOption> suggestions = new HashMap<>();
 
     public static final String JSON_FIELD_TYPES = "types";
     public static final String JSON_FIELD_SEARCH_TYPE = "searchType";
@@ -78,6 +79,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
     public static final String JSON_FIELD_SCRIPT_FIELDS = "scriptFields";
     public static final String JSON_FIELD_STORED_FIELDS = "storedFields";
     public static final String JSON_FIELD_INDICES_OPTIONS = "indicesOptions";
+    public static final String JSON_FIELD_SUGGESTIONS = "suggestions";
 
     public AbstractSearchOptions() {
     }
@@ -106,6 +108,7 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         scriptFields = other.getScriptFields();
         storedFields = other.getStoredFields();
         indicesOptions = other.getIndicesOptions();
+        suggestions = other.getSuggestions();
     }
 
     public AbstractSearchOptions(JsonObject json) {
@@ -152,6 +155,12 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
             }
         }
 
+        final JsonObject suggestOptionsJson = json.getJsonObject(JSON_FIELD_SUGGESTIONS);
+        if (suggestOptionsJson != null) {
+            for (String suggestionName : suggestOptionsJson.fieldNames()) {
+                suggestions.put(suggestionName, BaseSuggestOption.parseJson(suggestOptionsJson.getJsonObject(suggestionName)));
+            }
+        }
     }
 
     public List<String> getTypes() {
@@ -399,6 +408,16 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
         return returnThis();
     }
 
+    public Map<String, BaseSuggestOption> getSuggestions() {
+        return suggestions;
+    }
+
+    @GenIgnore
+    public T addSuggestion(String name, BaseSuggestOption baseSuggestOption) {
+        suggestions.put(name, baseSuggestOption);
+        return returnThis();
+    }
+
     public JsonObject toJson() {
 
         final JsonObject json = new JsonObject();
@@ -445,6 +464,12 @@ public abstract class AbstractSearchOptions<T extends AbstractSearchOptions<T>> 
                 scriptFieldsJson.put(scriptFieldOptionEntry.getKey(), scriptFieldOptionEntry.getValue().toJson());
             }
             json.put(JSON_FIELD_SCRIPT_FIELDS, scriptFieldsJson);
+        }
+
+        if (!suggestions.isEmpty()) {
+            final JsonObject jsonSuggestions = new JsonObject();
+            suggestions.entrySet().forEach(suggestion -> jsonSuggestions.put(suggestion.getKey(), suggestion.getValue().toJson()));
+            json.put(JSON_FIELD_SUGGESTIONS, jsonSuggestions);
         }
 
         return json;
