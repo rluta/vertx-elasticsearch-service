@@ -143,6 +143,36 @@ http://www.elasticsearch.org/guide/reference/api/get/
         });
 ```
 
+### Update
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
+
+```java
+    // Plain
+    final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    final UpdateOptions updateOptions = new UpdateOptions()
+        .setScript("ctx._source.field = 'new value'", ScriptType.INLINE);
+        // etc.
+    
+    elasticSearchService.update("twitter", "tweet", "123", updateOptions, updateResponse -> {
+        // Do something
+    });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    final UpdateOptions updateOptions = new UpdateOptions()
+        .setScript("ctx._source.field = 'new value'", ScriptType.INLINE);
+        // etc.
+        
+    rxElasticSearchService.update("twitter", "tweet", "123", updateOptions)
+        .subscribe(updateResponse -> {
+            // Do something
+        });
+```
+
 ### Multi Get
 
 https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html
