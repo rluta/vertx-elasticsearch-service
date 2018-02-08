@@ -143,6 +143,42 @@ http://www.elasticsearch.org/guide/reference/api/get/
         });
 ```
 
+### Multi Get
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html
+
+```java
+    // Plain
+    final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    final MultiGetQueryOptions multiGetQueryOptions = new MultiGetQueryOptions()
+        .setId("id")
+        .setIndex("twitter")
+        .setType("tweet")
+        .setFetchSource(true);
+        // etc.
+    
+    elasticSearchService.multiGet(Collections.singletonList(multiGetQueryOptions), multiGetResponse -> {
+        // Do something
+    });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    final MultiGetQueryOptions multiGetQueryOptions = new MultiGetQueryOptions()
+        .setId("id")
+        .setIndex("twitter")
+        .setType("tweet")
+        .setFetchSource(true);
+        // etc.
+        
+    rxElasticSearchService.multiGet(Collections.singletonList(multiGetQueryOptions))
+        .subscribe(multiGetResponse -> {
+            // Do something
+        });
+```
+
 ### Search
 
 http://www.elasticsearch.org/guide/reference/api/search/
@@ -179,6 +215,48 @@ http://www.elasticsearch.org/guide/reference/query-dsl/
             
     rxElasticSearchService.search("twitter", searchOptions)
         .subscribe(searchResponse -> {
+            // Do something
+        });
+```
+
+### Multi Search
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
+
+```java
+    // Plain
+    final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    final SearchOptions searchOptions = new SearchOptions()
+        .setQuery(new JsonObject("{\"match_all\": {}}"))
+        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+        .setFetchSource(true)
+        .addFieldSort("id", SortOrder.DESC)
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
+        // etc.
+        
+    final MultiSearchQueryOptions multiSearchQueryOptions = new MultiSearchQueryOptions().addIndex("twitter").setSearchOptions(searchOptions);
+        
+    elasticSearchService.multiSearch(Collections.singletonList(multiSearchQueryOptions), multiSearchResponse -> {
+        // Do something
+    }); 
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    final SearchOptions searchOptions = new SearchOptions()
+        .setQuery(new JsonObject("{\"match_all\": {}}"))
+        .setSearchType(SearchType.SCAN)
+        .setFetchSource(true)
+        .addFieldSort("id", SortOrder.DESC)
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
+        // etc.
+        
+    final MultiSearchQueryOptions multiSearchQueryOptions = new MultiSearchQueryOptions().addIndex("twitter").setSearchOptions(searchOptions);
+            
+    rxElasticSearchService.multiSearch("twitter", Collections.singletonList(multiSearchQueryOptions))
+        .subscribe(multiSearchResponse -> {
             // Do something
         });
 ```
@@ -276,44 +354,3 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-q
 }
 ```
 
-### Multi Search
-
-https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
-
-```java
-    // Plain
-    final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-    
-    final SearchOptions searchOptions = new SearchOptions()
-        .setQuery(new JsonObject("{\"match_all\": {}}"))
-        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setFetchSource(true)
-        .addFieldSort("id", SortOrder.DESC)
-        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
-        // etc.
-        
-    final MultiSearchQueryOptions multiSearchQueryOptions = new MultiSearchQueryOptions().addIndex("twitter").setSearchOptions(searchOptions);
-        
-    elasticSearchService.multiSearch(Collections.singletonList(multiSearchQueryOptions), multiSearchResponse -> {
-        // Do something
-    }); 
-    
-    
-    // RxJava
-    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-        
-    final SearchOptions searchOptions = new SearchOptions()
-        .setQuery(new JsonObject("{\"match_all\": {}}"))
-        .setSearchType(SearchType.SCAN)
-        .setFetchSource(true)
-        .addFieldSort("id", SortOrder.DESC)
-        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
-        // etc.
-        
-    final MultiSearchQueryOptions multiSearchQueryOptions = new MultiSearchQueryOptions().addIndex("twitter").setSearchOptions(searchOptions);
-            
-    rxElasticSearchService.multiSearch("twitter", multiSearchQueryOptions)
-        .subscribe(multiSearchResponse -> {
-            // Do something
-        });
-```
