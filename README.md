@@ -173,6 +173,46 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
         });
 ```
 
+### Bulk
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
+
+```java
+    // Plain
+    final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    final BulkOptions options = new BulkOptions().setTimeout("5s");
+    final BulkIndexOptions bulkIndexOptions = new BulkIndexOptions()
+        .setIndex("twitter")
+        .setType("tweet")
+        .setSource(new JsonObject().put("user", "hubrick").put("message", "love elastic search!"))
+        .setIndexOptions(new IndexOptions().setId("1")),
+        // etc.
+    
+    // There are corresponding methods for update (bulkUpdate), delete (bulkeDelete) or combined (bulk)
+    elasticSearchService.bulkIndex(Collections.singletonList(bulkIndexOptions), options, bulkResponse -> {
+        // Do something
+    });
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    final BulkOptions options = new BulkOptions().setTimeout("5s");
+    final BulkIndexOptions bulkIndexOptions = new BulkIndexOptions()
+        .setIndex("twitter")
+        .setType("tweet")
+        .setSource(new JsonObject().put("user", "hubrick").put("message", "love elastic search!"))
+        .setIndexOptions(new IndexOptions().setId("1")),
+        // etc.
+        
+    // There are corresponding methods for update (bulkUpdate), delete (bulkeDelete) or combined (bulk)
+    rxElasticSearchService.bulkIndex(Collections.singletonList(bulkIndexOptions), options)
+        .subscribe(bulkResponse -> {
+            // Do something
+        });
+```
+
 ### Multi Get
 
 https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html
