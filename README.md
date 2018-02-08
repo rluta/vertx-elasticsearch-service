@@ -73,21 +73,15 @@ Default bindings are provided for HK2 and Guice, but you can create your own bin
 See the [englishtown/vertx-hk2](https://github.com/englishtown/vertx-hk2) or [englishtown/vertx-guice](https://github.com/englishtown/vertx-guice) projects for further details.
 
 
-## Action Commands
+## Commands
 
 ### Index
 
 http://www.elasticsearch.org/guide/reference/api/index_/
 
-An example would be:
-
 ```java
     // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-    
-    elasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"), indexResponse -> {
-        // Do something
-    });
     
     final IndexOptions indexOptions = new IndexOptions()
         .setId("123")
@@ -102,11 +96,6 @@ An example would be:
     
     // RxJava
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-        
-    rxElasticSearchService.index("twitter", "tweet", new JsonObject().put("user", "hubrick").put("message", "love elastic search!"))
-        .subscribe(indexResponse -> {
-            // Do something
-        });
         
     final IndexOptions indexOptions = new IndexOptions()
         .setId("123")
@@ -128,10 +117,6 @@ http://www.elasticsearch.org/guide/reference/api/get/
     // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
     
-    elasticSearchService.get("twitter", "tweet", "123", getResponse -> {
-        // Do something
-    });
-    
     final GetOptions getOptions = new GetOptions()
         .setFetchSource(true)
         .addField("id")
@@ -145,11 +130,6 @@ http://www.elasticsearch.org/guide/reference/api/get/
     
     // RxJava
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-        
-    rxElasticSearchService.get("twitter", "tweet", "123")
-        .subscribe(getResponse -> {
-            // Do something
-        });
         
     final GetOptions getOptions = new GetOptions()
         .setFetchSource(true)
@@ -169,15 +149,9 @@ http://www.elasticsearch.org/guide/reference/api/search/
 
 http://www.elasticsearch.org/guide/reference/query-dsl/
 
-An example message would be:
-
 ```java
     // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-    
-    elasticSearchService.search("twitter", searchResponse -> {
-        // Do something
-    });
     
     final SearchOptions searchOptions = new SearchOptions()
         .setQuery(new JsonObject("{\"match_all\": {}}"))
@@ -194,11 +168,6 @@ An example message would be:
     
     // RxJava
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
-        
-    rxElasticSearchService.search("twitter")
-        .subscribe(searchResponse -> {
-            // Do something
-        });
         
     final SearchOptions searchOptions = new SearchOptions()
         .setQuery(new JsonObject("{\"match_all\": {}}"))
@@ -220,17 +189,11 @@ http://www.elasticsearch.org/guide/reference/api/search/scroll/
 
 First send a search message with `search_type` = `"scan"` and `scroll` = `"5m"` (some time string).  The search result will include a `_scroll_id` that will be valid for the scroll time specified.
 
-An example message would be:
-
 ```java
 {
     // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
-    elasticSearchService.searchScroll("c2Nhbjs1OzIxMTpyUkpzWnBIYVMzbVB0VGlaNHdjcWpnOzIxNTpyUkpzWnBI", searchResponse -> {
-        // Do something
-    });
-    
     final SearchScrollOptions searchScrollOptions = new SearchScrollOptions()
         .setScroll("5m");
 
@@ -242,11 +205,6 @@ An example message would be:
     // RxJava
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
             
-    rxElasticSearchService.searchScroll("c2Nhbjs1OzIxMTpyUkpzWnBIYVMzbVB0VGlaNHdjcWpnOzIxNTpyUkpzWnBI")
-        .subscribe(searchResponse -> {
-            // Do something
-        });
-       
     final SearchScrollOptions searchScrollOptions = new SearchScrollOptions()
         .setScroll("5m");
     
@@ -261,17 +219,11 @@ An example message would be:
 
 http://www.elasticsearch.org/guide/reference/api/delete/
 
-An example message would be:
-
 ```java
 {
     // Plain
     final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
            
-    elasticSearchService.delete("twitter", "tweet", "123", deleteResponse -> {
-        // Do something
-    });
-    
     final DeleteOptions deleteOptions = new DeleteOptions()
         .setTimeout("10s");
         
@@ -283,11 +235,6 @@ An example message would be:
     // RxJava
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
            
-    rxElasticSearchService.delete("twitter", "tweet", "123")
-        .subscribe(deleteResponse -> {
-            // Do something
-        });
-        
     final DeleteOptions deleteOptions = new DeleteOptions()
         .setTimeout("10s");
             
@@ -302,8 +249,6 @@ An example message would be:
 
 https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
 
-An example message would be:
-
 ```java
 {
     // Plain
@@ -314,10 +259,6 @@ An example message would be:
         .setQuery(new JsonObject("{\"match_all\": {}}")); 
            
     elasticSearchService.deleteByQuery("twitter", deleteByQueryOptions, deleteByQueryResponse -> {
-        // Do something
-    });
-    
-    elasticSearchService.delete("twitter", deleteByQueryOptions, deleteByQueryResponse -> {
         // Do something
     });
     
@@ -332,10 +273,47 @@ An example message would be:
         .subscribe(deleteByQueryResponse -> {
             // Do something
         });
-      
-    rxElasticSearchService.delete("twitter", deleteByQueryOptions)
-        .subscribe(deleteByQueryResponse -> {
+}
+```
+
+### Multi Search
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
+
+```java
+    // Plain
+    final ElasticSearchService elasticSearchService = ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    final SearchOptions searchOptions = new SearchOptions()
+        .setQuery(new JsonObject("{\"match_all\": {}}"))
+        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+        .setFetchSource(true)
+        .addFieldSort("id", SortOrder.DESC)
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
+        // etc.
+        
+    final MultiSearchQueryOptions multiSearchQueryOptions = new MultiSearchQueryOptions().addIndex("twitter").setSearchOptions(searchOptions);
+        
+    elasticSearchService.multiSearch(Collections.singletonList(multiSearchQueryOptions), multiSearchResponse -> {
+        // Do something
+    }); 
+    
+    
+    // RxJava
+    final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+        
+    final SearchOptions searchOptions = new SearchOptions()
+        .setQuery(new JsonObject("{\"match_all\": {}}"))
+        .setSearchType(SearchType.SCAN)
+        .setFetchSource(true)
+        .addFieldSort("id", SortOrder.DESC)
+        .addScriptSort("...", ScriptSortOption.Type.NUMERIC, new JsonObject(), SortOrder.DESC);
+        // etc.
+        
+    final MultiSearchQueryOptions multiSearchQueryOptions = new MultiSearchQueryOptions().addIndex("twitter").setSearchOptions(searchOptions);
+            
+    rxElasticSearchService.multiSearch("twitter", multiSearchQueryOptions)
+        .subscribe(multiSearchResponse -> {
             // Do something
         });
-}
 ```
