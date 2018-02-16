@@ -130,6 +130,18 @@ public class AggregationOption {
         return json;
     }
 
+    public JsonObject toEsJsonObject() {
+        final JsonObject aggregation = new JsonObject().put(type.name().toLowerCase(), definition);
+
+        if(!subAggregations.isEmpty()) {
+            final JsonObject subAggregationsObject = new JsonObject();
+            subAggregations.stream().forEach(e -> subAggregationsObject.mergeIn(e.toEsJsonObject()));
+            aggregation.put("aggregations", subAggregationsObject);
+        }
+
+        return new JsonObject().put(name, aggregation);
+    }
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
