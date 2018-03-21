@@ -54,12 +54,12 @@
 
         <!--Vert.x codegen does not play nice with maven-compiler-plugin 3.2-->
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
-        <maven-docker-plugin.version>2.11.24</maven-docker-plugin.version>
         <maven-surefire-plugin.version>2.14</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.14</maven-failsafe-plugin.version>
         <maven-source-plugin.version>2.1.2</maven-source-plugin.version>
         <maven-license-plugin.version>2.5</maven-license-plugin.version>
         <maven-javadoc-plugin.version>2.9</maven-javadoc-plugin.version>
+        <docker-maven-plugin.version>0.24.0</docker-maven-plugin.version>
 
         <!--Test properties-->
         <test.es.hostname>localhost</test.es.hostname>
@@ -241,19 +241,10 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.alexecollins.docker</groupId>
+                <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>${maven-docker-plugin.version}</version>
-                <configuration>
-                    <removeIntermediateImages>true</removeIntermediateImages>
-                </configuration>
+                <version>${docker-maven-plugin.version}</version>
                 <executions>
-                    <execution>
-                        <id>package</id>
-                        <goals>
-                            <goal>package</goal>
-                        </goals>
-                    </execution>
                     <execution>
                         <id>start</id>
                         <phase>pre-integration-test</phase>
@@ -269,13 +260,28 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.alexecollins.docker</groupId>
-                        <artifactId>docker-java-orchestration-plugin-boot2docker</artifactId>
-                        <version>2.11.24</version>
-                    </dependency>
-                </dependencies>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>elasticsearch</alias>
+                            <name>docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.3</name>
+                            <run>
+                                <env>
+                                    <discovery.type>single-node</discovery.type>
+                                    <cluster.name>elasticsearch</cluster.name>
+                                </env>
+                                <namingStrategy>alias</namingStrategy>
+                                <ports>
+                                    <port>9300:9300</port>
+                                </ports>
+                                <wait>
+                                    <log>\[o.e.n.Node(.*)\] \[(.*)\] started</log>
+                                    <time>30000</time>
+                                </wait>
+                            </run>
+                        </image>
+                    </images>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
