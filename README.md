@@ -30,7 +30,7 @@ Originaly Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/e
 
 ## Configuration
 
-The configuration options are as follows:
+Deploying the vertx service with id 'com.hubrick.vertx.vertx-elasticsearch-service'. The configuration options are as follows:
 
 ```json
 {
