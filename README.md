@@ -11,6 +11,8 @@ Originaly Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/e
 | 3.3.3     | 2.2.2          | 1.1.0                           |
 | 3.5.0     | 5.6.1          | 2.0.0                           |
 | 3.5.0     | 6.1.1          | 2.2.0                           |
+| 3.5.0     | 6.1.1          | 2.3.0                           |
+
 
 ## Compatibility
 - Java 8+
@@ -23,7 +25,7 @@ Originaly Forked from [ef-labs/vertx-elasticsearch-service](https://github.com/e
 <dependency>
     <groupId>com.hubrick.vertx</groupId>
     <artifactId>vertx-elasticsearch-service</artifactId>
-    <version>2.2.0</version>
+    <version>2.3.0</version>
 </dependency>
 ```
 
@@ -92,8 +94,11 @@ http://www.elasticsearch.org/guide/reference/api/index_/
     });
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final IndexOptions indexOptions = new IndexOptions()
         .setId("123")
@@ -126,8 +131,11 @@ http://www.elasticsearch.org/guide/reference/api/get/
     });
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final GetOptions getOptions = new GetOptions()
         .setFetchSource(true)
@@ -158,8 +166,11 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
     });
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final UpdateOptions updateOptions = new UpdateOptions()
         .setScript("ctx._source.field = 'new value'", ScriptType.INLINE);
@@ -193,8 +204,11 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
     });
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final BulkOptions options = new BulkOptions().setTimeout("5s");
     final BulkIndexOptions bulkIndexOptions = new BulkIndexOptions()
@@ -231,8 +245,11 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.h
     });
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final MultiGetQueryOptions multiGetQueryOptions = new MultiGetQueryOptions()
         .setId("id")
@@ -270,8 +287,11 @@ http://www.elasticsearch.org/guide/reference/query-dsl/
     }); 
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final SearchOptions searchOptions = new SearchOptions()
         .setQuery(new JsonObject("{\"match_all\": {}}"))
@@ -309,9 +329,11 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-sea
         // Do something
     }); 
     
-    
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
         
     final SearchOptions searchOptions = new SearchOptions()
         .setQuery(new JsonObject("{\"match_all\": {}}"))
@@ -347,9 +369,11 @@ First send a search message with `search_type` = `"scan"` and `scroll` = `"5m"` 
         // Do something
     });
     
-    
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
             
     final SearchScrollOptions searchScrollOptions = new SearchScrollOptions()
         .setScroll("5m");
@@ -377,9 +401,11 @@ http://www.elasticsearch.org/guide/reference/api/delete/
         // Do something
     });
     
-    
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
            
     final DeleteOptions deleteOptions = new DeleteOptions()
         .setTimeout("10s");
@@ -409,8 +435,12 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-q
     });
     
     
-    // RxJava
+    // RxJava 1
     final RxElasticSearchService rxElasticSearchService = RxElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
+    // RxJava 2
+    final Rx2ElasticSearchService rx2ElasticSearchService = Rx2ElasticSearchService.createEventBusProxy(vertx, "eventbus-address");
+    
     final DeleteByQueryOptions deleteByQueryOptions = new DeleteByQueryOptions()
         .setTimeoutInMillis(1000l)
         .setQuery(new JsonObject("{\"match_all\": {}}")); 
